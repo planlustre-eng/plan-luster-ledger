@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luster OS - PLAN LUSTRE 案場帳務系統</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            japanese: {
+              bg: '#FBFBFA',
+              paper: '#FFFFFF',
+              text: '#2C2A29',
+              muted: '#7E7A74',
+              border: '#E8E6E1',
+              accent: '#C4A482',
+              success: '#8FA499',
+              warn: '#D1A18C'
+            }
+          },
+          fontFamily: { sans: ['Noto Sans TC', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #FBFBFA; color: #2C2A29; letter-spacing: 0.05em; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #FBFBFA; }
+    ::-webkit-scrollbar-thumb { background: #E8E6E1; border-radius: 2px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans" x-data="lusterApp()" x-init="fetchData()">
+
+  <!-- 頂部導覽列 -->
+  <header class="border-b border-japanese-border bg-japanese-paper/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-3">
+      <div class="w-2 h-2 rounded-full" :class="isLoading ? 'bg-japanese-warn animate-ping' : 'bg-japanese-accent'"></div>
+      <span class="font-medium tracking-widest text-sm text-japanese-text">PLAN LUSTRE</span>
+      <span class="text-xs text-japanese-muted">|</span>
+      <span class="text-xs text-japanese-muted font-light tracking-wider" x-text="isLoading ? '同步中 Syncing...' : '雲端已同步 Cloud Synced'"></span>
+    </div>
+    <div class="text-xs text-japanese-muted flex items-center space-x-2">
+      <span>目前案場：</span>
+      <select class="bg-transparent border-none focus:ring-0 text-japanese-text font-medium cursor-pointer" x-model="currentProject">
+        <template x-for="proj in projects" :key="proj.id">
+          <option :value="proj.id" x-text="proj.name"></option>
+        </template>
+      </select>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-6xl w-full mx-auto p-6 space-y-8">
+    
+    <!-- 第一區：案場概要與損益看板 -->
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg">
+        <span class="text-xs text-japanese-muted block mb-2 tracking-wider">CONTRACT AMOUNT / 合約金額</span>
+        <div class="text-2xl font-light text-japanese-text" x-text="'$ ' + formatNumber(getActiveProject().contractAmount)"></div>
+        <div class="text-[11px] text-japanese-muted mt-2">設計與工程總承攬額</div>
+      </div>
+
+      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg">
+        <span class="text-xs text-japanese-muted block mb-2 tracking-wider">REVENUE RECEIVED / 已收款</span>
+        <div class="text-2xl font-light text-japanese-success" x-text="'$ ' + formatNumber(getActiveProject().receivedAmount)"></div>
+        <div class="text-[11px] text-japanese-muted mt-2">
+          剩餘待收：<span class="font-medium" x-text="'$ ' + formatNumber(getActiveProject().contractAmount - getActiveProject().receivedAmount)"></span>
+        </div>
+      </div>
+
+      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg">
+        <span class="text-xs text-japanese-muted block mb-2 tracking-wider">TOTAL EXPENSES / 已發包成本</span>
+        <div class="text-2xl font-light text-japanese-text" x-text="'$ ' + formatNumber(calculateTotalExpenses())"></div>
+        <div class="text-[11px] text-japanese-muted mt-2" :class="calculateExpenseRatio() > 80 ? 'text-japanese-warn font-medium' : ''">
+          預算佔比：<span x-text="calculateExpenseRatio() + '%'"></span>
+          <span x-show="calculateExpenseRatio() > 80"> (接近預警線)</span>
+        </div>
+      </div>
+
+      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg" :class="calculateProfit() < 0 ? 'border-japanese-warn' : 'border-japanese-accent/30'">
+        <span class="text-xs text-japanese-accent block mb-2 tracking-wider font-medium">ESTIMATED PROFIT / 估算毛利</span>
+        <div class="text-2xl font-medium text-japanese-accent" x-text="'$ ' + formatNumber(calculateProfit())"></div>
+        <div class="text-[11px] text-japanese-muted mt-2">
+          即時毛利率：<span class="font-medium text-japanese-text" x-text="calculateProfitMargin() + '%'"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 第二區：記帳與明細 -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- 左側：表單 -->
+      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg h-fit space-y-6">
+        <div>
+          <h2 class="text-sm font-medium tracking-wider text-japanese-text">NEW ENTRY / 新增收支</h2>
+          <p class="text-xs text-japanese-muted mt-1 font-light">直接同步儲存至 Google 試算表</p>
+        </div>
+
+        <form @submit.prevent="addEntry()" class="space-y-4">
+          <div>
+            <label class="block text-[11px] text-japanese-muted tracking-wider mb-1.5">TYPE / 帳目類型</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" @click="newEntry.type = 'expense'" 
+                      :class="newEntry.type === 'expense' ? 'bg-japanese-text text-white' : 'bg-transparent border border-japanese-border text-japanese-muted'"
+                      class="py-2 text-xs rounded transition-all focus:outline-none">
+                支出 (工班/材料)
+              </button>
+              <button type="button" @click="newEntry.type = 'income'" 
+                      :class="newEntry.type === 'income' ? 'bg-japanese-accent text-white' : 'bg-transparent border border-japanese-border text-japanese-muted'"
+                      class="py-2 text-xs rounded transition-all focus:outline-none">
+                收入 (業主請款)
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-japanese-muted tracking-wider mb-1">ITEM / 品項與說明</label>
+            <input type="text" x-model="newEntry.item" placeholder="例如：木作一期、進口塗料" required
+                   class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-2 text-xs focus:ring-1 focus:ring-japanese-accent focus:border-japanese-accent outline-none text-japanese-text">
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-japanese-muted tracking-wider mb-1">AMOUNT / 金額 (NTD)</label>
+            <input type="number" x-model.number="newEntry.amount" placeholder="NT$" required min="1"
+                   class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-2 text-xs focus:ring-1 focus:ring-japanese-accent focus:border-japanese-accent outline-none text-japanese-text">
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[11px] text-japanese-muted tracking-wider mb-1">CATEGORY / 分類</label>
+              <select x-model="newEntry.category"
+                      class="w-full bg-japanese-bg border border-japanese-border rounded px-2 py-2 text-xs focus:ring-1 focus:ring-japanese-accent focus:border-japanese-accent outline-none text-japanese-text">
+                <option value="拆除工程">拆除工程</option>
+                <option value="泥作工程">泥作工程</option>
+                <option value="水電工程">水電工程</option>
+                <option value="木作工程">木作工程</option>
+                <option value="油漆工程">油漆工程</option>
+                <option value="系統櫃體">系統櫃體</option>
+                <option value="軟裝家具">軟裝家具</option>
+                <option value="設計/監工費">設計/監工費</option>
+                <option value="其他">其他</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] text-japanese-muted tracking-wider mb-1">DATE / 日期</label>
+              <input type="date" x-model="newEntry.date" required
+                     class="w-full bg-japanese-bg border border-japanese-border rounded px-2 py-1.5 text-xs focus:ring-1 focus:ring-japanese-accent focus:border-japanese-accent outline-none text-japanese-text">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-japanese-muted tracking-wider mb-1">PARTNER / 經手人或工班備註</label>
+            <input type="text" x-model="newEntry.partner" placeholder="例如：阿昌師、XX石材"
+                   class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-2 text-xs focus:ring-1 focus:ring-japanese-accent focus:border-japanese-accent outline-none text-japanese-text">
+          </div>
+
+          <button type="submit" :disabled="isLoading"
+                  class="w-full bg-japanese-text hover:bg-japanese-accent disabled:bg-japanese-muted text-white py-2.5 rounded text-xs tracking-widest font-medium transition-all">
+            <span x-text="isLoading ? '儲存中...' : '同步登記帳目 ENTER'"></span>
+          </button>
+        </form>
+      </div>
+
+      <!-- 右側：明細 -->
+      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg lg:col-span-2 flex flex-col h-[520px]">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h2 class="text-sm font-medium tracking-wider text-japanese-text">LEDGER DETAIL / 帳目明細</h2>
+            <p class="text-xs text-japanese-muted mt-1 font-light">即時拉取 Google Sheets 工作表紀錄</p>
+          </div>
+          <span class="text-xs text-japanese-accent font-medium" x-text="'共 ' + filteredEntries().length + ' 筆記錄'"></span>
+        </div>
+
+        <div class="flex-1 overflow-y-auto space-y-3 pr-2">
+          <template x-for="item in filteredEntries()" :key="item.id">
+            <div class="flex items-center justify-between p-3.5 bg-japanese-bg rounded border border-japanese-border/40 hover:border-japanese-accent/30 transition-all">
+              <div class="flex items-center space-x-4">
+                <div class="w-1.5 h-8 rounded-full" :class="item.type === 'income' ? 'bg-japanese-accent' : 'bg-japanese-muted'"></div>
+                <div>
+                  <div class="text-xs font-medium text-japanese-text" x-text="item.item"></div>
+                  <div class="flex items-center space-x-2 mt-1 text-[10px] text-japanese-muted">
+                    <span x-text="formatDate(item.date)"></span>
+                    <span>•</span>
+                    <span class="bg-japanese-border/50 px-1.5 py-0.5 rounded text-[9px]" x-text="item.category"></span>
+                    <span x-show="item.partner" x-text="'• ' + item.partner"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center space-x-4">
+                <span class="text-xs font-medium" :class="item.type === 'income' ? 'text-japanese-accent' : 'text-japanese-text'"
+                      x-text="(item.type === 'income' ? '+ ' : '- ') + '$' + formatNumber(item.amount)"></span>
+                <button @click="deleteEntry(item.id)" :disabled="isLoading" class="text-japanese-muted hover:text-japanese-warn text-xs p-1">
+                  ✕
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-japanese-border py-6 text-center text-[10px] text-japanese-muted tracking-widest mt-auto">
+    © 2026 PLAN LUSTRE. DESIGNED FOR INNER PEACE AND FINANCIAL CLARITY.
+  </footer>
+
+  <script>
+    // ⚠️ 替換為你在第一步「新增部署」中複製的 Google Web App 網址
+    const API_URL = "https://script.google.com/macros/s/AKfycby4qYqNCSvRldLAk4yY9i7TrJWT1x5uuSv-b8QN5Z2sgdYEcNkYzNB6yUlbxylbsNL_5A/exec";
+
+    function lusterApp() {
+      return {
+        currentProject: 1,
+        projects: [{ id: 1, name: '載入中...', contractAmount: 0, receivedAmount: 0 }],
+        entries: [],
+        isLoading: false,
+        newEntry: { type: 'expense', item: '', amount: null, category: '木作工程', date: new Date().toISOString().split('T')[0], partner: '' },
+
+        async fetchData() {
+          this.isLoading = true;
+          try {
+            let res = await fetch(`${API_URL}?action=getInitialData`);
+            let data = await res.json();
+            this.projects = data.projects;
+            this.entries = data.entries;
+          } catch (e) {
+            console.error("資料載入失敗，請確認 API_URL 或 CORS 設定:", e);
+          } finally {
+            this.isLoading = false;
+          }
+        },
+
+        getActiveProject() {
+          return this.projects.find(p => p.id == this.currentProject) || { contractAmount: 0, receivedAmount: 0 };
+        },
+
+        filteredEntries() {
+          return this.entries
+            .filter(item => item.projectId == this.currentProject)
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
+        },
+
+        calculateTotalExpenses() {
+          return this.entries
+            .filter(item => item.projectId == this.currentProject && item.type === 'expense')
+            .reduce((sum, item) => sum + Number(item.amount), 0);
+        },
+
+        calculateExpenseRatio() {
+          const proj = this.getActiveProject();
+          if (!proj.contractAmount) return 0;
+          return Math.round((this.calculateTotalExpenses() / proj.contractAmount) * 100);
+        },
+
+        calculateProfit() {
+          const proj = this.getActiveProject();
+          return proj.contractAmount - this.calculateTotalExpenses();
+        },
+
+        calculateProfitMargin() {
+          const proj = this.getActiveProject();
+          if (!proj.contractAmount) return 0;
+          return Math.round((this.calculateProfit() / proj.contractAmount) * 100);
+        },
+
+        async addEntry() {
+          this.isLoading = true;
+          const tempId = Date.now();
+          const entryToAdd = {
+            id: tempId,
+            projectId: Number(this.currentProject),
+            ...this.newEntry
+          };
+
+          try {
+            let res = await fetch(API_URL, {
+              method: 'POST',
+              body: JSON.stringify({ action: 'addEntry', data: entryToAdd })
+            });
+            let result = await res.json();
+            if (result.success) {
+              this.entries.push(entryToAdd);
+              if (entryToAdd.type === 'income') {
+                const proj = this.getActiveProject();
+                proj.receivedAmount = Number(proj.receivedAmount) + Number(entryToAdd.amount);
+              }
+              this.newEntry.item = '';
+              this.newEntry.amount = null;
+              this.newEntry.partner = '';
+            }
+          } catch (e) {
+            alert("新增失敗，請確認連線狀態");
+          } finally {
+            this.isLoading = false;
+          }
+        },
+
+        async deleteEntry(id) {
+          if (!confirm("確定要刪除此筆收支紀錄嗎？（將同步從 Google Sheets 刪除）")) return;
+          this.isLoading = true;
+          try {
+            let res = await fetch(API_URL, {
+              method: 'POST',
+              body: JSON.stringify({ action: 'deleteEntry', id: id })
+            });
+            let result = await res.json();
+            if (result.success) {
+              const index = this.entries.findIndex(item => item.id === id);
+              if (index !== -1) {
+                const entry = this.entries[index];
+                if (entry.type === 'income') {
+                  const proj = this.getActiveProject();
+                  proj.receivedAmount = Math.max(0, Number(proj.receivedAmount) - Number(entry.amount));
+                }
+                this.entries.splice(index, 1);
+              }
+            }
+          } catch (e) {
+            alert("刪除失敗");
+          } finally {
+            this.isLoading = false;
+          }
+        },
+
+        formatNumber(num) { return (Number(num) || 0).toLocaleString(); },
+        formatDate(dateStr) {
+          if(!dateStr) return "";
+          // 處理 Apps Script 日期格式轉換
+          const d = new Date(dateStr);
+          return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+      };
+    }
+  </script>
+</body>
+</html>
