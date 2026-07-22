@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Luster OS - PLAN LUSTRE 案場帳務系統</title>
+  <title>Luster OS - PLAN LUSTRE 案場管理系統</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -15,14 +15,9 @@
         extend: {
           colors: {
             japanese: {
-              bg: '#FBFBFA',
-              paper: '#FFFFFF',
-              text: '#2C2A29',
-              muted: '#7E7A74',
-              border: '#E8E6E1',
-              accent: '#C4A482',
-              success: '#8FA499',
-              warn: '#D1A18C'
+              bg: '#FBFBFA', paper: '#FFFFFF', text: '#2C2A29',
+              muted: '#7E7A74', border: '#E8E6E1', accent: '#C4A482',
+              success: '#8FA499', warn: '#D1A18C'
             }
           },
           fontFamily: { sans: ['Noto Sans TC', 'sans-serif'] }
@@ -32,307 +27,406 @@
   </script>
   <style>
     body { background-color: #FBFBFA; color: #2C2A29; letter-spacing: 0.05em; }
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: #FBFBFA; }
-    ::-webkit-scrollbar-thumb { background: #E8E6E1; border-radius: 2px; }
+    [x-cloak] { display: none !important; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col font-sans" x-data="lusterApp()" x-init="fetchData()">
 
-  <!-- 頂部導覽列 -->
-  <header class="border-b border-japanese-border bg-japanese-paper/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
-    <div class="flex items-center space-x-3">
+  <!-- 頂部導覽列 (修復手機排版，並新增模式切換) -->
+  <header class="border-b border-japanese-border bg-japanese-paper sticky top-0 z-50 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+    <div class="flex items-center space-x-2">
       <div class="w-2 h-2 rounded-full" :class="isLoading ? 'bg-japanese-warn animate-ping' : 'bg-japanese-accent'"></div>
-      <span class="font-medium tracking-widest text-sm text-japanese-text">PLAN LUSTRE</span>
-      <span class="text-xs text-japanese-muted">|</span>
-      <span class="text-xs text-japanese-muted font-light tracking-wider" x-text="isLoading ? '同步中 Syncing...' : '雲端已同步 Cloud Synced'"></span>
+      <span class="font-medium tracking-widest text-xs sm:text-sm text-japanese-text">PLAN LUSTRE</span>
+      <!-- 視角切換 -->
+      <button @click="viewMode = viewMode === 'admin' ? 'client' : 'admin'" 
+              class="ml-2 text-[10px] px-2 py-0.5 rounded border border-japanese-accent/40 text-japanese-accent hover:bg-japanese-accent hover:text-white transition-all">
+        <span x-text="viewMode === 'admin' ? ' 切換：業主視角' : ' 切換：內部管理'"></span>
+      </button>
     </div>
-    <div class="text-xs text-japanese-muted flex items-center space-x-2">
-      <span>目前案場：</span>
-      <select class="bg-transparent border-none focus:ring-0 text-japanese-text font-medium cursor-pointer" x-model="currentProject">
+
+    <!-- 選擇案場與新增 -->
+    <div class="flex items-center space-x-1.5 text-xs">
+      <select class="bg-japanese-bg border border-japanese-border rounded px-2 py-1 text-xs text-japanese-text focus:outline-none max-w-[130px] sm:max-w-none truncate" x-model="currentProject">
         <template x-for="proj in projects" :key="proj.id">
           <option :value="proj.id" x-text="proj.name"></option>
         </template>
       </select>
+      <button x-show="viewMode === 'admin'" @click="showProjectModal = true" class="bg-japanese-text text-white px-2 py-1 rounded text-[11px] shrink-0">
+        + 案場
+      </button>
     </div>
   </header>
 
-  <main class="flex-1 max-w-6xl w-full mx-auto p-6 space-y-8">
-    
-    <!-- 第一區：案場概要與損益看板 -->
-    <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg">
-        <span class="text-xs text-japanese-muted block mb-2 tracking-wider">CONTRACT AMOUNT / 合約金額</span>
-        <div class="text-2xl font-light text-japanese-text" x-text="'$ ' + formatNumber(getActiveProject().contractAmount)"></div>
-        <div class="text-[11px] text-japanese-muted mt-2">設計與工程總承攬額</div>
-      </div>
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 space-y-6">
 
-      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg">
-        <span class="text-xs text-japanese-muted block mb-2 tracking-wider">REVENUE RECEIVED / 已收款</span>
-        <div class="text-2xl font-light text-japanese-success" x-text="'$ ' + formatNumber(getActiveProject().receivedAmount)"></div>
-        <div class="text-[11px] text-japanese-muted mt-2">
-          剩餘待收：<span class="font-medium" x-text="'$ ' + formatNumber(getActiveProject().contractAmount - getActiveProject().receivedAmount)"></span>
-        </div>
-      </div>
-
-      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg">
-        <span class="text-xs text-japanese-muted block mb-2 tracking-wider">TOTAL EXPENSES / 已發包成本</span>
-        <div class="text-2xl font-light text-japanese-text" x-text="'$ ' + formatNumber(calculateTotalExpenses())"></div>
-        <div class="text-[11px] text-japanese-muted mt-2" :class="calculateExpenseRatio() > 80 ? 'text-japanese-warn font-medium' : ''">
-          預算佔比：<span x-text="calculateExpenseRatio() + '%'"></span>
-          <span x-show="calculateExpenseRatio() > 80"> (接近預警線)</span>
-        </div>
-      </div>
-
-      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg" :class="calculateProfit() < 0 ? 'border-japanese-warn' : 'border-japanese-accent/30'">
-        <span class="text-xs text-japanese-accent block mb-2 tracking-wider font-medium">ESTIMATED PROFIT / 估算毛利</span>
-        <div class="text-2xl font-medium text-japanese-accent" x-text="'$ ' + formatNumber(calculateProfit())"></div>
-        <div class="text-[11px] text-japanese-muted mt-2">
-          即時毛利率：<span class="font-medium text-japanese-text" x-text="calculateProfitMargin() + '%'"></span>
-        </div>
-      </div>
-    </section>
-
-    <!-- 第二區：記帳與明細 -->
-    <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- 左側：表單 -->
-      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg h-fit space-y-6">
-        <div>
-          <h2 class="text-sm font-medium tracking-wider text-japanese-text">NEW ENTRY / 新增收支</h2>
-          <p class="text-xs text-japanese-muted mt-1 font-light">直接同步儲存至 Google 試算表</p>
+    <!-- ------------------ 模式一：內部管理模式 (ADMIN VIEW) ------------------ -->
+    <template x-if="viewMode === 'admin'">
+      <div class="space-y-6">
+        <!-- Tab 切換 -->
+        <div class="flex border-b border-japanese-border text-xs space-x-6">
+          <button @click="activeTab = 'finance'" :class="activeTab === 'finance' ? 'border-b-2 border-japanese-accent text-japanese-text font-medium py-2' : 'text-japanese-muted py-2'">帳務概況</button>
+          <button @click="activeTab = 'schedule'" :class="activeTab === 'schedule' ? 'border-b-2 border-japanese-accent text-japanese-text font-medium py-2' : 'text-japanese-muted py-2'">工程進度表</button>
         </div>
 
-        <form @submit.prevent="addEntry()" class="space-y-4">
-          <div>
-            <label class="block text-[11px] text-japanese-muted tracking-wider mb-1.5">TYPE / 帳目類型</label>
-            <div class="grid grid-cols-2 gap-2">
-              <button type="button" @click="newEntry.type = 'expense'" 
-                      :class="newEntry.type === 'expense' ? 'bg-japanese-text text-white' : 'bg-transparent border border-japanese-border text-japanese-muted'"
-                      class="py-2 text-xs rounded transition-all focus:outline-none">
-                支出 (工班/材料)
-              </button>
-              <button type="button" @click="newEntry.type = 'income'" 
-                      :class="newEntry.type === 'income' ? 'bg-japanese-accent text-white' : 'bg-transparent border border-japanese-border text-japanese-muted'"
-                      class="py-2 text-xs rounded transition-all focus:outline-none">
-                收入 (業主請款)
-              </button>
+        <!-- 頁籤 1：帳務概況 -->
+        <div x-show="activeTab === 'finance'" class="space-y-6">
+          <!-- 財務看板 -->
+          <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-japanese-paper border border-japanese-border p-4 rounded-lg">
+              <span class="text-[10px] text-japanese-muted block mb-1">CONTRACT / 合約金額</span>
+              <div class="text-lg font-light" x-text="'$ ' + formatNumber(getActiveProject().contractAmount)"></div>
             </div>
-          </div>
-
-          <div>
-            <label class="block text-[11px] text-japanese-muted tracking-wider mb-1">ITEM / 品項與說明</label>
-            <input type="text" x-model="newEntry.item" placeholder="例如：木作一期、進口塗料" required
-                   class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-2 text-xs focus:ring-1 focus:ring-japanese-accent focus:border-japanese-accent outline-none text-japanese-text">
-          </div>
-
-          <div>
-            <label class="block text-[11px] text-japanese-muted tracking-wider mb-1">AMOUNT / 金額 (NTD)</label>
-            <input type="number" x-model.number="newEntry.amount" placeholder="NT$" required min="1"
-                   class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-2 text-xs focus:ring-1 focus:ring-japanese-accent focus:border-japanese-accent outline-none text-japanese-text">
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-[11px] text-japanese-muted tracking-wider mb-1">CATEGORY / 分類</label>
-              <select x-model="newEntry.category"
-                      class="w-full bg-japanese-bg border border-japanese-border rounded px-2 py-2 text-xs focus:ring-1 focus:ring-japanese-accent focus:border-japanese-accent outline-none text-japanese-text">
-                <option value="拆除工程">拆除工程</option>
-                <option value="泥作工程">泥作工程</option>
-                <option value="水電工程">水電工程</option>
-                <option value="木作工程">木作工程</option>
-                <option value="油漆工程">油漆工程</option>
-                <option value="系統櫃體">系統櫃體</option>
-                <option value="軟裝家具">軟裝家具</option>
-                <option value="設計/監工費">設計/監工費</option>
-                <option value="其他">其他</option>
-              </select>
+            <div class="bg-japanese-paper border border-japanese-border p-4 rounded-lg">
+              <span class="text-[10px] text-japanese-muted block mb-1">RECEIVED / 已收款</span>
+              <div class="text-lg font-light text-japanese-success" x-text="'$ ' + formatNumber(getActiveProject().receivedAmount)"></div>
             </div>
-            <div>
-              <label class="block text-[11px] text-japanese-muted tracking-wider mb-1">DATE / 日期</label>
-              <input type="date" x-model="newEntry.date" required
-                     class="w-full bg-japanese-bg border border-japanese-border rounded px-2 py-1.5 text-xs focus:ring-1 focus:ring-japanese-accent focus:border-japanese-accent outline-none text-japanese-text">
+            <div class="bg-japanese-paper border border-japanese-border p-4 rounded-lg">
+              <span class="text-[10px] text-japanese-muted block mb-1">EXPENSES / 已發包成本</span>
+              <div class="text-lg font-light" x-text="'$ ' + formatNumber(calculateTotalExpenses())"></div>
             </div>
-          </div>
+            <div class="bg-japanese-paper border border-japanese-border p-4 rounded-lg">
+              <span class="text-[10px] text-japanese-accent block mb-1">PROFIT / 估算毛利</span>
+              <div class="text-lg font-medium text-japanese-accent" x-text="'$ ' + formatNumber(calculateProfit())"></div>
+            </div>
+          </section>
 
-          <div>
-            <label class="block text-[11px] text-japanese-muted tracking-wider mb-1">PARTNER / 經手人或工班備註</label>
-            <input type="text" x-model="newEntry.partner" placeholder="例如：阿昌師、XX石材"
-                   class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-2 text-xs focus:ring-1 focus:ring-japanese-accent focus:border-japanese-accent outline-none text-japanese-text">
-          </div>
+          <!-- 記帳與明細 -->
+          <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- 記帳表單 -->
+            <div class="bg-japanese-paper border border-japanese-border p-5 rounded-lg space-y-4">
+              <h2 class="text-xs font-medium tracking-wider text-japanese-text">NEW ENTRY / 新增收支</h2>
+              <form @submit.prevent="addEntry()" class="space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                  <button type="button" @click="newEntry.type = 'expense'" :class="newEntry.type === 'expense' ? 'bg-japanese-text text-white' : 'border border-japanese-border text-japanese-muted'" class="py-1.5 text-xs rounded">支出</button>
+                  <button type="button" @click="newEntry.type = 'income'" :class="newEntry.type === 'income' ? 'bg-japanese-accent text-white' : 'border border-japanese-border text-japanese-muted'" class="py-1.5 text-xs rounded">收入</button>
+                </div>
+                <input type="text" x-model="newEntry.item" placeholder="品項說明 (如: 木作一期)" required class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-1.5 text-xs outline-none">
+                <input type="number" x-model.number="newEntry.amount" placeholder="金額 NT$" required min="1" class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-1.5 text-xs outline-none">
+                <div class="grid grid-cols-2 gap-2">
+                  <select x-model="newEntry.category" class="bg-japanese-bg border border-japanese-border rounded px-2 py-1.5 text-xs outline-none">
+                    <option value="拆除工程">拆除工程</option>
+                    <option value="泥作工程">泥作工程</option>
+                    <option value="水電工程">水電工程</option>
+                    <option value="木作工程">木作工程</option>
+                    <option value="油漆工程">油漆工程</option>
+                    <option value="系統櫃體">系統櫃體</option>
+                    <option value="軟裝家具">軟裝家具</option>
+                    <option value="設計/監工費">設計/監工費</option>
+                  </select>
+                  <input type="date" x-model="newEntry.date" required class="bg-japanese-bg border border-japanese-border rounded px-2 py-1.5 text-xs outline-none">
+                </div>
+                <input type="text" x-model="newEntry.partner" placeholder="工班/廠商備註" class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-1.5 text-xs outline-none">
+                <button type="submit" :disabled="isLoading" class="w-full bg-japanese-text text-white py-2 rounded text-xs tracking-widest">送出帳目 ENTER</button>
+              </form>
+            </div>
 
-          <button type="submit" :disabled="isLoading"
-                  class="w-full bg-japanese-text hover:bg-japanese-accent disabled:bg-japanese-muted text-white py-2.5 rounded text-xs tracking-widest font-medium transition-all">
-            <span x-text="isLoading ? '儲存中...' : '同步登記帳目 ENTER'"></span>
-          </button>
-        </form>
-      </div>
-
-      <!-- 右側：明細 -->
-      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg lg:col-span-2 flex flex-col h-[520px]">
-        <div class="flex justify-between items-center mb-6">
-          <div>
-            <h2 class="text-sm font-medium tracking-wider text-japanese-text">LEDGER DETAIL / 帳目明細</h2>
-            <p class="text-xs text-japanese-muted mt-1 font-light">即時拉取 Google Sheets 工作表紀錄</p>
-          </div>
-          <span class="text-xs text-japanese-accent font-medium" x-text="'共 ' + filteredEntries().length + ' 筆記錄'"></span>
-        </div>
-
-        <div class="flex-1 overflow-y-auto space-y-3 pr-2">
-          <template x-for="item in filteredEntries()" :key="item.id">
-            <div class="flex items-center justify-between p-3.5 bg-japanese-bg rounded border border-japanese-border/40 hover:border-japanese-accent/30 transition-all">
-              <div class="flex items-center space-x-4">
-                <div class="w-1.5 h-8 rounded-full" :class="item.type === 'income' ? 'bg-japanese-accent' : 'bg-japanese-muted'"></div>
-                <div>
-                  <div class="text-xs font-medium text-japanese-text" x-text="item.item"></div>
-                  <div class="flex items-center space-x-2 mt-1 text-[10px] text-japanese-muted">
-                    <span x-text="formatDate(item.date)"></span>
-                    <span>•</span>
-                    <span class="bg-japanese-border/50 px-1.5 py-0.5 rounded text-[9px]" x-text="item.category"></span>
-                    <span x-show="item.partner" x-text="'• ' + item.partner"></span>
+            <!-- 帳目列表 -->
+            <div class="bg-japanese-paper border border-japanese-border p-5 rounded-lg lg:col-span-2 flex flex-col h-[400px]">
+              <h2 class="text-xs font-medium tracking-wider text-japanese-text mb-4">LEDGER DETAIL / 帳目明細</h2>
+              <div class="flex-1 overflow-y-auto space-y-2 pr-1">
+                <template x-for="item in filteredEntries()" :key="item.id">
+                  <div class="flex items-center justify-between p-3 bg-japanese-bg rounded border border-japanese-border/40 text-xs">
+                    <div>
+                      <div class="font-medium text-japanese-text" x-text="item.item"></div>
+                      <div class="text-[10px] text-japanese-muted mt-0.5" x-text="formatDate(item.date) + ' • ' + item.category + (item.partner ? ' • ' + item.partner : '')"></div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                      <span :class="item.type === 'income' ? 'text-japanese-accent' : 'text-japanese-text'" x-text="(item.type === 'income' ? '+' : '-') + ' $' + formatNumber(item.amount)"></span>
+                      <button @click="deleteEntry(item.id)" class="text-japanese-muted hover:text-japanese-warn">✕</button>
+                    </div>
                   </div>
+                </template>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- 頁籤 2：工程進度時間軸與甘特圖 -->
+        <div x-show="activeTab === 'schedule'" class="space-y-6">
+          <div class="bg-japanese-paper border border-japanese-border p-5 rounded-lg space-y-4">
+            <div class="flex justify-between items-center">
+              <h2 class="text-xs font-medium tracking-wider text-japanese-text">SCHEDULE TIMELINE / 工程時間軸</h2>
+              <button @click="showScheduleModal = true" class="bg-japanese-text text-white px-2.5 py-1 rounded text-xs">+ 新增工期行程</button>
+            </div>
+
+            <!-- 時間軸顯示 (按鈕節點樣式) -->
+            <div class="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-japanese-border">
+              <template x-for="task in filteredSchedules()" :key="task.id">
+                <div class="relative flex items-start justify-between bg-japanese-bg p-3 rounded border border-japanese-border">
+                  <div class="absolute -left-6 top-3.5 w-2.5 h-2.5 rounded-full border-2 border-white" :class="task.status === '已完成' ? 'bg-japanese-success' : 'bg-japanese-accent'"></div>
+                  <div>
+                    <div class="text-xs font-medium text-japanese-text" x-text="task.task"></div>
+                    <div class="text-[10px] text-japanese-muted mt-1" x-text="formatDate(task.startDate) + ' ～ ' + formatDate(task.endDate)"></div>
+                  </div>
+                  <span class="text-[10px] px-2 py-0.5 rounded" :class="task.status === '已完成' ? 'bg-japanese-success/20 text-japanese-success' : 'bg-japanese-accent/20 text-japanese-accent'" x-text="task.status"></span>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ------------------ 模式二：業主專用視角 (CLIENT VIEW) ------------------ -->
+    <template x-if="viewMode === 'client'">
+      <div class="space-y-8">
+        <!-- 歡迎面板 -->
+        <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg text-center space-y-2">
+          <span class="text-[10px] tracking-widest text-japanese-accent">PROJECT STATUS</span>
+          <h1 class="text-lg font-medium text-japanese-text" x-text="getActiveProject().name"></h1>
+          <p class="text-xs text-japanese-muted font-light">感謝選擇 PLAN LUSTRE，以下為目前的工程實時進度與紀錄。</p>
+        </div>
+
+        <!-- 區塊 1：施工時間軸 -->
+        <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-4">
+          <h2 class="text-xs font-medium tracking-wider text-japanese-text border-b border-japanese-border pb-2">01 / 工程時間軸 TIMELINE</h2>
+          <div class="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-japanese-border">
+            <template x-for="task in filteredSchedules()" :key="task.id">
+              <div class="relative flex justify-between items-center bg-japanese-bg p-3.5 rounded border border-japanese-border/60">
+                <div class="absolute -left-6 w-2.5 h-2.5 rounded-full border-2 border-white" :class="task.status === '已完成' ? 'bg-japanese-success' : 'bg-japanese-accent'"></div>
+                <div>
+                  <div class="text-xs font-medium" x-text="task.task"></div>
+                  <div class="text-[10px] text-japanese-muted mt-0.5" x-text="formatDate(task.startDate) + ' ～ ' + formatDate(task.endDate)"></div>
+                </div>
+                <span class="text-[10px] px-2 py-0.5 rounded" :class="task.status === '已完成' ? 'bg-japanese-success/20 text-japanese-success' : 'bg-japanese-accent/20 text-japanese-accent'" x-text="task.status"></span>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- 區塊 2：施工照片紀錄 -->
+        <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-4">
+          <div class="flex justify-between items-center border-b border-japanese-border pb-2">
+            <h2 class="text-xs font-medium tracking-wider text-japanese-text">02 / 現場施工照片 PHOTOS</h2>
+            <button @click="showPhotoModal = true" class="text-[11px] text-japanese-accent hover:underline">+ 上傳照片</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <template x-for="photo in filteredPhotos()" :key="photo.id">
+              <div class="bg-japanese-bg border border-japanese-border rounded overflow-hidden">
+                <img :src="photo.url" class="w-full h-40 object-cover" alt="施工照片">
+                <div class="p-3 space-y-1">
+                  <div class="flex justify-between text-[10px] text-japanese-muted">
+                    <span x-text="photo.category" class="font-medium text-japanese-text"></span>
+                    <span x-text="formatDate(photo.date)"></span>
+                  </div>
+                  <p class="text-xs text-japanese-muted font-light truncate" x-text="photo.note"></p>
                 </div>
               </div>
-              <div class="flex items-center space-x-4">
-                <span class="text-xs font-medium" :class="item.type === 'income' ? 'text-japanese-accent' : 'text-japanese-text'"
-                      x-text="(item.type === 'income' ? '+ ' : '- ') + '$' + formatNumber(item.amount)"></span>
-                <button @click="deleteEntry(item.id)" :disabled="isLoading" class="text-japanese-muted hover:text-japanese-warn text-xs p-1">
-                  ✕
-                </button>
+            </template>
+          </div>
+        </div>
+
+        <!-- 區塊 3：瑕疵與現場備註回報 -->
+        <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-4">
+          <div class="flex justify-between items-center border-b border-japanese-border pb-2">
+            <h2 class="text-xs font-medium tracking-wider text-japanese-text">03 / 備註與待調整事項 DEFECTS & NOTES</h2>
+            <button @click="showDefectModal = true" class="text-[11px] text-japanese-accent hover:underline">+ 回報事項</button>
+          </div>
+          <div class="space-y-2">
+            <template x-for="defect in filteredDefects()" :key="defect.id">
+              <div class="flex items-center justify-between p-3 bg-japanese-bg rounded border border-japanese-border/60 text-xs">
+                <div>
+                  <div class="font-medium text-japanese-text" x-text="defect.item"></div>
+                  <div class="text-[10px] text-japanese-muted mt-0.5" x-text="defect.note"></div>
+                </div>
+                <span class="text-[10px] px-2 py-0.5 rounded" :class="defect.status === '已改善' ? 'bg-japanese-success/20 text-japanese-success' : 'bg-japanese-warn/20 text-japanese-warn'" x-text="defect.status"></span>
               </div>
-            </div>
-          </template>
+            </template>
+          </div>
         </div>
       </div>
-    </section>
+    </template>
+
   </main>
+
+  <!-- 🪟 彈跳視窗集合 (Modals) -->
+  <!-- 新增案場 Modal -->
+  <div x-show="showProjectModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" x-cloak>
+    <div class="bg-japanese-paper border border-japanese-border rounded-lg p-6 max-w-sm w-full space-y-4">
+      <h3 class="text-xs font-medium text-japanese-text">NEW PROJECT / 新增案場</h3>
+      <input type="text" x-model="newProject.name" placeholder="案場名稱" class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-1.5 text-xs outline-none">
+      <input type="number" x-model.number="newProject.contractAmount" placeholder="合約總金額 NT$" class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-1.5 text-xs outline-none">
+      <div class="flex justify-end space-x-2 pt-2">
+        <button @click="showProjectModal = false" class="px-3 py-1 border border-japanese-border text-xs rounded">取消</button>
+        <button @click="addProject()" class="px-3 py-1 bg-japanese-text text-white text-xs rounded">確認新增</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增工程行程 Modal -->
+  <div x-show="showScheduleModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" x-cloak>
+    <div class="bg-japanese-paper border border-japanese-border rounded-lg p-6 max-w-sm w-full space-y-4">
+      <h3 class="text-xs font-medium text-japanese-text">NEW SCHEDULE / 新增工期</h3>
+      <input type="text" x-model="newSchedule.task" placeholder="工種/工程名稱 (如: 泥作打底)" class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-1.5 text-xs outline-none">
+      <div class="grid grid-cols-2 gap-2">
+        <input type="date" x-model="newSchedule.startDate" class="bg-japanese-bg border border-japanese-border rounded px-2 py-1.5 text-xs outline-none">
+        <input type="date" x-model="newSchedule.endDate" class="bg-japanese-bg border border-japanese-border rounded px-2 py-1.5 text-xs outline-none">
+      </div>
+      <select x-model="newSchedule.status" class="w-full bg-japanese-bg border border-japanese-border rounded px-2 py-1.5 text-xs outline-none">
+        <option value="未開始">未開始</option>
+        <option value="進行中">進行中</option>
+        <option value="已完成">已完成</option>
+      </select>
+      <div class="flex justify-end space-x-2 pt-2">
+        <button @click="showScheduleModal = false" class="px-3 py-1 border border-japanese-border text-xs rounded">取消</button>
+        <button @click="addSchedule()" class="px-3 py-1 bg-japanese-text text-white text-xs rounded">新增行程</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增照片 Modal -->
+  <div x-show="showPhotoModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" x-cloak>
+    <div class="bg-japanese-paper border border-japanese-border rounded-lg p-6 max-w-sm w-full space-y-4">
+      <h3 class="text-xs font-medium text-japanese-text">NEW PHOTO / 上傳施工照片</h3>
+      <input type="text" x-model="newPhoto.category" placeholder="工種 (如: 木作天花板)" class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-1.5 text-xs outline-none">
+      <input type="date" x-model="newPhoto.date" class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-1.5 text-xs outline-none">
+      <input type="url" x-model="newPhoto.url" placeholder="照片網址 (可使用 Imgur / Google Drive 連結)" class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-1.5 text-xs outline-none">
+      <input type="text" x-model="newPhoto.note" placeholder="照片說明備註" class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-1.5 text-xs outline-none">
+      <div class="flex justify-end space-x-2 pt-2">
+        <button @click="showPhotoModal = false" class="px-3 py-1 border border-japanese-border text-xs rounded">取消</button>
+        <button @click="addPhoto()" class="px-3 py-1 bg-japanese-text text-white text-xs rounded">上傳</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增瑕疵 Modal -->
+  <div x-show="showDefectModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" x-cloak>
+    <div class="bg-japanese-paper border border-japanese-border rounded-lg p-6 max-w-sm w-full space-y-4">
+      <h3 class="text-xs font-medium text-japanese-text">NEW DEFECT / 回報待調整事項</h3>
+      <input type="text" x-model="newDefect.item" placeholder="項目 (如: 玄關油漆不平)" class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-1.5 text-xs outline-none">
+      <input type="text" x-model="newDefect.note" placeholder="詳細說明" class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-1.5 text-xs outline-none">
+      <select x-model="newDefect.status" class="w-full bg-japanese-bg border border-japanese-border rounded px-2 py-1.5 text-xs outline-none">
+        <option value="待處理">待處理</option>
+        <option value="改善中">改善中</option>
+        <option value="已改善">已改善</option>
+      </select>
+      <div class="flex justify-end space-x-2 pt-2">
+        <button @click="showDefectModal = false" class="px-3 py-1 border border-japanese-border text-xs rounded">取消</button>
+        <button @click="addDefect()" class="px-3 py-1 bg-japanese-text text-white text-xs rounded">送出回報</button>
+      </div>
+    </div>
+  </div>
 
   <footer class="border-t border-japanese-border py-6 text-center text-[10px] text-japanese-muted tracking-widest mt-auto">
     © 2026 PLAN LUSTRE. DESIGNED FOR INNER PEACE AND FINANCIAL CLARITY.
   </footer>
 
   <script>
-    // ⚠️ 替換為你在第一步「新增部署」中複製的 Google Web App 網址
+    // ⚠️ 請替換為你在第一步「新增部署」中複製的 Google Web App 網址
     const API_URL = "https://script.google.com/macros/s/AKfycby4qYqNCSvRldLAk4yY9i7TrJWT1x5uuSv-b8QN5Z2sgdYEcNkYzNB6yUlbxylbsNL_5A/exec";
 
     function lusterApp() {
       return {
+        viewMode: 'admin', // 'admin' 或 'client'
+        activeTab: 'finance',
         currentProject: 1,
-        projects: [{ id: 1, name: '載入中...', contractAmount: 0, receivedAmount: 0 }],
+        projects: [],
         entries: [],
+        schedules: [],
+        photos: [],
+        defects: [],
         isLoading: false,
+
+        showProjectModal: false,
+        showScheduleModal: false,
+        showPhotoModal: false,
+        showDefectModal: false,
+
+        newProject: { name: '', contractAmount: null },
         newEntry: { type: 'expense', item: '', amount: null, category: '木作工程', date: new Date().toISOString().split('T')[0], partner: '' },
+        newSchedule: { task: '', startDate: new Date().toISOString().split('T')[0], endDate: '', status: '未開始' },
+        newPhoto: { category: '', date: new Date().toISOString().split('T')[0], url: '', note: '' },
+        newDefect: { item: '', status: '待處理', note: '' },
 
         async fetchData() {
           this.isLoading = true;
           try {
             let res = await fetch(`${API_URL}?action=getInitialData`);
             let data = await res.json();
-            this.projects = data.projects;
-            this.entries = data.entries;
+            this.projects = data.projects || [];
+            this.entries = data.entries || [];
+            this.schedules = data.schedules || [];
+            this.photos = data.photos || [];
+            this.defects = data.defects || [];
+            if (this.projects.length > 0 && !this.projects.find(p => p.id == this.currentProject)) {
+              this.currentProject = this.projects[0].id;
+            }
           } catch (e) {
-            console.error("資料載入失敗，請確認 API_URL 或 CORS 設定:", e);
+            console.error("資料載入失敗:", e);
           } finally {
             this.isLoading = false;
           }
         },
 
-        getActiveProject() {
-          return this.projects.find(p => p.id == this.currentProject) || { contractAmount: 0, receivedAmount: 0 };
-        },
+        getActiveProject() { return this.projects.find(p => p.id == this.currentProject) || { contractAmount: 0, receivedAmount: 0 }; },
+        filteredEntries() { return this.entries.filter(i => i.projectId == this.currentProject).sort((a,b) => new Date(b.date)-new Date(a.date)); },
+        filteredSchedules() { return this.schedules.filter(i => i.projectId == this.currentProject).sort((a,b) => new Date(a.startDate)-new Date(b.startDate)); },
+        filteredPhotos() { return this.photos.filter(i => i.projectId == this.currentProject).sort((a,b) => new Date(b.date)-new Date(a.date)); },
+        filteredDefects() { return this.defects.filter(i => i.projectId == this.currentProject); },
 
-        filteredEntries() {
-          return this.entries
-            .filter(item => item.projectId == this.currentProject)
-            .sort((a, b) => new Date(b.date) - new Date(a.date));
-        },
+        calculateTotalExpenses() { return this.entries.filter(i => i.projectId == this.currentProject && i.type === 'expense').reduce((s, i) => s + Number(i.amount), 0); },
+        calculateProfit() { return this.getActiveProject().contractAmount - this.calculateTotalExpenses(); },
 
-        calculateTotalExpenses() {
-          return this.entries
-            .filter(item => item.projectId == this.currentProject && item.type === 'expense')
-            .reduce((sum, item) => sum + Number(item.amount), 0);
-        },
-
-        calculateExpenseRatio() {
-          const proj = this.getActiveProject();
-          if (!proj.contractAmount) return 0;
-          return Math.round((this.calculateTotalExpenses() / proj.contractAmount) * 100);
-        },
-
-        calculateProfit() {
-          const proj = this.getActiveProject();
-          return proj.contractAmount - this.calculateTotalExpenses();
-        },
-
-        calculateProfitMargin() {
-          const proj = this.getActiveProject();
-          if (!proj.contractAmount) return 0;
-          return Math.round((this.calculateProfit() / proj.contractAmount) * 100);
+        async addProject() {
+          this.isLoading = true;
+          const id = Date.now();
+          const p = { id, name: this.newProject.name, contractAmount: Number(this.newProject.contractAmount), receivedAmount: 0 };
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addProject', data: p }) });
+          this.projects.push(p);
+          this.currentProject = id;
+          this.showProjectModal = false;
+          this.isLoading = false;
         },
 
         async addEntry() {
           this.isLoading = true;
-          const tempId = Date.now();
-          const entryToAdd = {
-            id: tempId,
-            projectId: Number(this.currentProject),
-            ...this.newEntry
-          };
+          const e = { id: Date.now(), projectId: Number(this.currentProject), ...this.newEntry };
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addEntry', data: e }) });
+          this.entries.push(e);
+          if (e.type === 'income') this.getActiveProject().receivedAmount += Number(e.amount);
+          this.newEntry.item = ''; this.newEntry.amount = null;
+          this.isLoading = false;
+        },
 
-          try {
-            let res = await fetch(API_URL, {
-              method: 'POST',
-              body: JSON.stringify({ action: 'addEntry', data: entryToAdd })
-            });
-            let result = await res.json();
-            if (result.success) {
-              this.entries.push(entryToAdd);
-              if (entryToAdd.type === 'income') {
-                const proj = this.getActiveProject();
-                proj.receivedAmount = Number(proj.receivedAmount) + Number(entryToAdd.amount);
-              }
-              this.newEntry.item = '';
-              this.newEntry.amount = null;
-              this.newEntry.partner = '';
-            }
-          } catch (e) {
-            alert("新增失敗，請確認連線狀態");
-          } finally {
-            this.isLoading = false;
-          }
+        async addSchedule() {
+          this.isLoading = true;
+          const s = { id: Date.now(), projectId: Number(this.currentProject), ...this.newSchedule };
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addSchedule', data: s }) });
+          this.schedules.push(s);
+          this.showScheduleModal = false;
+          this.isLoading = false;
+        },
+
+        async addPhoto() {
+          this.isLoading = true;
+          const p = { id: Date.now(), projectId: Number(this.currentProject), ...this.newPhoto };
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addPhoto', data: p }) });
+          this.photos.push(p);
+          this.showPhotoModal = false;
+          this.isLoading = false;
+        },
+
+        async addDefect() {
+          this.isLoading = true;
+          const d = { id: Date.now(), projectId: Number(this.currentProject), ...this.newDefect };
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addDefect', data: d }) });
+          this.defects.push(d);
+          this.showDefectModal = false;
+          this.isLoading = false;
         },
 
         async deleteEntry(id) {
-          if (!confirm("確定要刪除此筆收支紀錄嗎？（將同步從 Google Sheets 刪除）")) return;
+          if (!confirm("確定要刪除嗎？")) return;
           this.isLoading = true;
-          try {
-            let res = await fetch(API_URL, {
-              method: 'POST',
-              body: JSON.stringify({ action: 'deleteEntry', id: id })
-            });
-            let result = await res.json();
-            if (result.success) {
-              const index = this.entries.findIndex(item => item.id === id);
-              if (index !== -1) {
-                const entry = this.entries[index];
-                if (entry.type === 'income') {
-                  const proj = this.getActiveProject();
-                  proj.receivedAmount = Math.max(0, Number(proj.receivedAmount) - Number(entry.amount));
-                }
-                this.entries.splice(index, 1);
-              }
-            }
-          } catch (e) {
-            alert("刪除失敗");
-          } finally {
-            this.isLoading = false;
-          }
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteEntry', id }) });
+          this.entries = this.entries.filter(i => i.id !== id);
+          this.isLoading = false;
         },
 
         formatNumber(num) { return (Number(num) || 0).toLocaleString(); },
-        formatDate(dateStr) {
-          if(!dateStr) return "";
-          // 處理 Apps Script 日期格式轉換
-          const d = new Date(dateStr);
+        formatDate(dStr) {
+          if (!dStr) return '';
+          const d = new Date(dStr);
           return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         }
       };
