@@ -39,23 +39,32 @@
       <div class="w-2.5 h-2.5 rounded-full" :class="isLoading ? 'bg-japanese-warn animate-ping' : 'bg-japanese-accent'"></div>
       <span class="font-medium tracking-widest text-xs sm:text-sm text-japanese-text">PLAN LUSTRE</span>
       
-      <!-- 無 Icon 切換按鈕 (若是獨立業主連結 mode=client 則自動隱藏切換鈕) -->
+      <!-- 無 Icon 切換按鈕 -->
       <button x-show="!isClientOnly" @click="viewMode = viewMode === 'admin' ? 'client' : 'admin'" 
               class="ml-1 text-[11px] px-2.5 py-1 rounded-full border border-japanese-accent/60 text-japanese-accent active:bg-japanese-accent active:text-white transition-all font-medium">
         <span x-text="viewMode === 'admin' ? '切換業主視角' : '切換內部管理'"></span>
       </button>
     </div>
 
-    <!-- 選擇案場與新增案場按鈕 -->
-    <div class="flex items-center space-x-2 text-xs">
-      <select class="bg-japanese-bg border border-japanese-border rounded-lg px-2.5 py-1.5 text-xs text-japanese-text focus:outline-none max-w-[140px] sm:max-w-none truncate" x-model="currentProject">
+    <!-- 選擇案場、新增與刪除案場 -->
+    <div class="flex items-center space-x-1.5 text-xs">
+      <select class="bg-japanese-bg border border-japanese-border rounded-lg px-2.5 py-1.5 text-xs text-japanese-text focus:outline-none max-w-[130px] sm:max-w-none truncate" x-model="currentProject">
         <template x-for="proj in projects" :key="proj.id">
           <option :value="proj.id" x-text="proj.name"></option>
         </template>
       </select>
-      <button x-show="viewMode === 'admin'" @click="showProjectModal = true" class="bg-japanese-btn text-white px-3 py-1.5 rounded-lg text-xs font-medium active:scale-95 transition-all shrink-0 cursor-pointer">
-        + 案場
-      </button>
+      
+      <!-- 內部管理模式下顯示新增/刪除案場 -->
+      <template x-if="viewMode === 'admin'">
+        <div class="flex space-x-1 shrink-0">
+          <button @click="showProjectModal = true" class="bg-japanese-btn text-white px-2.5 py-1.5 rounded-lg text-xs font-medium active:scale-95 transition-all cursor-pointer">
+            + 案場
+          </button>
+          <button @click="deleteCurrentProject()" class="border border-japanese-warn text-japanese-warn px-2 py-1.5 rounded-lg text-xs hover:bg-japanese-warn hover:text-white active:scale-95 transition-all cursor-pointer" title="刪除當前案場">
+            ✕ 刪除
+          </button>
+        </div>
+      </template>
     </div>
   </header>
 
@@ -65,11 +74,11 @@
     <template x-if="viewMode === 'admin'">
       <div class="space-y-6">
         <!-- Tab 切換 -->
-        <div class="flex border-b border-japanese-border text-xs space-x-6">
-          <button @click="activeTab = 'finance'" :class="activeTab === 'finance' ? 'border-b-2 border-japanese-accent text-japanese-text font-bold py-2' : 'text-japanese-muted py-2'">帳務概況</button>
-          <button @click="activeTab = 'schedule'" :class="activeTab === 'schedule' ? 'border-b-2 border-japanese-accent text-japanese-text font-bold py-2' : 'text-japanese-muted py-2'">工程進度表</button>
-          <button @click="activeTab = 'defects'" :class="activeTab === 'defects' ? 'border-b-2 border-japanese-accent text-japanese-text font-bold py-2' : 'text-japanese-muted py-2'">業主備註與回覆 (<span x-text="filteredDefects().length"></span>)</button>
-          <button @click="activeTab = 'docs'" :class="activeTab === 'docs' ? 'border-b-2 border-japanese-accent text-japanese-text font-bold py-2' : 'text-japanese-muted py-2'">文件管理</button>
+        <div class="flex border-b border-japanese-border text-xs space-x-6 overflow-x-auto">
+          <button @click="activeTab = 'finance'" :class="activeTab === 'finance' ? 'border-b-2 border-japanese-accent text-japanese-text font-bold py-2' : 'text-japanese-muted py-2'" class="whitespace-nowrap">帳務概況</button>
+          <button @click="activeTab = 'schedule'" :class="activeTab === 'schedule' ? 'border-b-2 border-japanese-accent text-japanese-text font-bold py-2' : 'text-japanese-muted py-2'" class="whitespace-nowrap">工程進度表</button>
+          <button @click="activeTab = 'defects'" :class="activeTab === 'defects' ? 'border-b-2 border-japanese-accent text-japanese-text font-bold py-2' : 'text-japanese-muted py-2'" class="whitespace-nowrap">業主備註與回覆 (<span x-text="filteredDefects().length"></span>)</button>
+          <button @click="activeTab = 'docs'" :class="activeTab === 'docs' ? 'border-b-2 border-japanese-accent text-japanese-text font-bold py-2' : 'text-japanese-muted py-2'" class="whitespace-nowrap">文件管理</button>
         </div>
 
         <!-- 頁籤 1：帳務概況 -->
@@ -151,30 +160,51 @@
           </section>
         </div>
 
-        <!-- 頁籤 2：工程時間軸 -->
+        <!-- 頁籤 2：工程時間軸 (支援左滑刪除) -->
         <div x-show="activeTab === 'schedule'" class="space-y-6">
           <div class="bg-japanese-paper border border-japanese-border p-5 rounded-xl shadow-sm space-y-4">
             <div class="flex justify-between items-center">
-              <h2 class="text-xs font-medium tracking-wider text-japanese-text">SCHEDULE TIMELINE / 工程時間軸</h2>
-              <button @click="showScheduleModal = true" class="bg-japanese-btn text-white px-3 py-1.5 rounded-lg text-xs font-medium active:scale-95 cursor-pointer">+ 新增工期</button>
+              <div>
+                <h2 class="text-xs font-medium tracking-wider text-japanese-text">SCHEDULE TIMELINE / 工程時間軸</h2>
+                <p class="text-[10px] text-japanese-muted mt-0.5">提示：在工期項目上「向左滑動」可拉出刪除按鈕</p>
+              </div>
+              <button @click="showScheduleModal = true" class="bg-japanese-btn text-white px-3 py-1.5 rounded-lg text-xs font-medium active:scale-95 cursor-pointer shrink-0">+ 新增工期</button>
             </div>
 
-            <div class="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-japanese-border">
+            <div class="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-japanese-border overflow-hidden">
               <template x-for="task in filteredSchedules()" :key="task.id">
-                <div class="relative flex items-start justify-between bg-japanese-bg p-3.5 rounded-lg border border-japanese-border">
-                  <div class="absolute -left-6 top-4 w-2.5 h-2.5 rounded-full border-2 border-white" :class="task.status === '已完成' ? 'bg-japanese-success' : 'bg-japanese-accent'"></div>
-                  <div>
-                    <div class="text-xs font-medium text-japanese-text" x-text="task.task"></div>
-                    <div class="text-[10px] text-japanese-muted mt-1" x-text="formatDate(task.startDate) + ' ～ ' + formatDate(task.endDate)"></div>
+                <div class="relative overflow-hidden rounded-lg">
+                  <!-- 滑動背後的刪除按鈕 -->
+                  <div class="absolute inset-y-0 right-0 w-20 bg-japanese-warn text-white text-xs flex items-center justify-center font-medium cursor-pointer" @click="deleteSchedule(task.id)">
+                    刪除
                   </div>
-                  <span class="text-[10px] px-2 py-0.5 rounded" :class="task.status === '已完成' ? 'bg-japanese-success/20 text-japanese-success' : 'bg-japanese-accent/20 text-japanese-accent'" x-text="task.status"></span>
+
+                  <!-- 可滑動的主卡片 -->
+                  <div class="relative bg-japanese-bg p-3.5 border border-japanese-border flex items-center justify-between transition-transform duration-200 ease-out"
+                       :style="'transform: translateX(' + (swipedScheduleId === task.id ? '-80px' : '0px') + ')'"
+                       @touchstart="touchStart($event)"
+                       @touchend="touchEnd($event, task.id)">
+                    
+                    <div class="absolute -left-6 top-4 w-2.5 h-2.5 rounded-full border-2 border-white" :class="task.status === '已完成' ? 'bg-japanese-success' : 'bg-japanese-accent'"></div>
+                    
+                    <div>
+                      <div class="text-xs font-medium text-japanese-text" x-text="task.task"></div>
+                      <div class="text-[10px] text-japanese-muted mt-1" x-text="formatDate(task.startDate) + ' ～ ' + formatDate(task.endDate)"></div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                      <span class="text-[10px] px-2 py-0.5 rounded" :class="task.status === '已完成' ? 'bg-japanese-success/20 text-japanese-success' : 'bg-japanese-accent/20 text-japanese-accent'" x-text="task.status"></span>
+                      <!-- 桌機版顯示小刪除叉叉 -->
+                      <button @click.stop="deleteSchedule(task.id)" class="hidden sm:inline-block text-japanese-muted hover:text-japanese-warn text-xs px-1">✕</button>
+                    </div>
+                  </div>
                 </div>
               </template>
             </div>
           </div>
         </div>
 
-        <!-- 頁籤 3：業主備註與即時回覆 -->
+        <!-- 頁籤 3：業主備註與即時回覆 (修復跑版問題) -->
         <div x-show="activeTab === 'defects'" class="space-y-6">
           <div class="bg-japanese-paper border border-japanese-border p-5 rounded-xl shadow-sm space-y-4">
             <h2 class="text-xs font-medium tracking-wider text-japanese-text">DEFECTS & REPLIES / 業主回報事項與處理</h2>
@@ -186,15 +216,19 @@
                       <span class="text-xs font-medium text-japanese-text" x-text="defect.item"></span>
                       <p class="text-xs text-japanese-muted font-light mt-0.5" x-text="defect.note"></p>
                     </div>
-                    <select x-model="defect.status" @change="updateDefect(defect)" class="text-[11px] px-2 py-1 rounded border border-japanese-border bg-white">
+                    <select x-model="defect.status" @change="updateDefect(defect)" class="text-[11px] px-2 py-1 rounded border border-japanese-border bg-white outline-none">
                       <option value="待處理">待處理</option>
                       <option value="改善中">改善中</option>
                       <option value="已改善">已改善</option>
                     </select>
                   </div>
-                  <div class="flex gap-2 pt-2 border-t border-japanese-border/50">
-                    <input type="text" x-model="defect.reply" placeholder="輸入給業主的回覆內容..." class="flex-1 bg-white border border-japanese-border rounded px-2.5 py-1 text-xs outline-none">
-                    <button @click="updateDefect(defect)" class="bg-japanese-btn text-white px-3 py-1 rounded text-xs shrink-0 active:scale-95">更新狀態</button>
+
+                  <!-- 修正跑版：採用 flex-col / sm:flex-row 彈性排版，防止黑框爆出 -->
+                  <div class="flex flex-col sm:flex-row gap-2 pt-2 border-t border-japanese-border/50">
+                    <input type="text" x-model="defect.reply" placeholder="輸入給業主的回覆內容..." class="flex-1 bg-white border border-japanese-border rounded px-3 py-1.5 text-xs outline-none focus:border-japanese-accent">
+                    <button @click="updateDefect(defect)" class="bg-japanese-btn hover:bg-black text-white px-4 py-1.5 rounded text-xs shrink-0 active:scale-95 transition-all cursor-pointer w-full sm:w-auto">
+                      更新狀態/回覆
+                    </button>
                   </div>
                 </div>
               </template>
@@ -202,7 +236,7 @@
           </div>
         </div>
 
-        <!-- 頁籤 4：新增業主文件下載網址 -->
+        <!-- 頁籤 4：業主文件管理 -->
         <div x-show="activeTab === 'docs'" class="space-y-6">
           <div class="bg-japanese-paper border border-japanese-border p-5 rounded-xl shadow-sm space-y-4">
             <div class="flex justify-between items-center border-b border-japanese-border pb-2">
@@ -355,13 +389,14 @@
     </div>
   </div>
 
-  <!-- 上傳照片 Modal -->
+  <!-- 上傳照片 Modal（修復：可支援手機相簿匯入） -->
   <div x-show="showPhotoModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" x-cloak>
     <div class="bg-japanese-paper rounded-xl p-6 max-w-sm w-full space-y-4 shadow-xl">
       <h3 class="text-xs font-medium text-japanese-text">UPLOAD PHOTO / 上傳施工照片</h3>
       <div class="space-y-2">
-        <label class="block text-[10px] text-japanese-muted">選擇照片 (拍照或相簿)</label>
-        <input type="file" accept="image/*" capture="environment" @change="handleFileUpload($event)" class="w-full text-xs text-japanese-muted file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-japanese-btn file:text-white">
+        <label class="block text-[10px] text-japanese-muted">選擇照片 (相簿匯入或現場拍照)</label>
+        <!-- 移除 capture 屬性，讓手機彈出選單選擇「相簿」或「拍照」 -->
+        <input type="file" accept="image/*" @change="handleFileUpload($event)" class="w-full text-xs text-japanese-muted file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-japanese-btn file:text-white">
       </div>
       <input type="text" x-model="newPhoto.category" placeholder="工種 (如: 木作工程)" class="w-full bg-japanese-bg border border-japanese-border rounded-lg px-3 py-2 text-xs outline-none">
       <input type="date" x-model="newPhoto.date" class="w-full bg-japanese-bg border border-japanese-border rounded-lg px-3 py-2 text-xs outline-none">
@@ -433,6 +468,10 @@
         showDefectModal: false,
         showDocModal: false,
 
+        // 滑動刪除手勢數據
+        touchStartX: 0,
+        swipedScheduleId: null,
+
         newProject: { name: '', contractAmount: null },
         newEntry: { type: 'expense', item: '', amount: null, date: new Date().toISOString().split('T')[0], partner: '' },
         newSchedule: { task: '', startDate: new Date().toISOString().split('T')[0], endDate: '', status: '未開始' },
@@ -463,6 +502,20 @@
             console.error("資料載入失敗:", e);
           } finally {
             this.isLoading = false;
+          }
+        },
+
+        // 滑動手勢處理
+        touchStart(e) {
+          this.touchStartX = e.touches[0].clientX;
+        },
+        touchEnd(e, id) {
+          const touchEndX = e.changedTouches[0].clientX;
+          const diff = this.touchStartX - touchEndX;
+          if (diff > 50) {
+            this.swipedScheduleId = id; // 左滑拉出
+          } else if (diff < -50) {
+            this.swipedScheduleId = null; // 右滑收回
           }
         },
 
@@ -503,6 +556,22 @@
           this.isLoading = false;
         },
 
+        async deleteCurrentProject() {
+          const proj = this.getActiveProject();
+          if (!proj.id) return alert("目前沒有選取的案場！");
+          if (!confirm(`確定要刪除「${proj.name}」嗎？這個動作無法復原。`)) return;
+
+          this.isLoading = true;
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteProject', id: String(proj.id) }) });
+          this.projects = this.projects.filter(p => String(p.id) !== String(proj.id));
+          if (this.projects.length > 0) {
+            this.currentProject = String(this.projects[0].id);
+          } else {
+            this.currentProject = '';
+          }
+          this.isLoading = false;
+        },
+
         async addEntry() {
           this.isLoading = true;
           const e = { id: String(Date.now()), projectId: String(this.currentProject), ...this.newEntry };
@@ -519,6 +588,15 @@
           await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addSchedule', data: s }) });
           this.schedules.push(s);
           this.showScheduleModal = false;
+          this.isLoading = false;
+        },
+
+        async deleteSchedule(id) {
+          if (!confirm("確定要刪除此工期嗎？")) return;
+          this.isLoading = true;
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteSchedule', id: String(id) }) });
+          this.schedules = this.schedules.filter(s => String(s.id) !== String(id));
+          this.swipedScheduleId = null;
           this.isLoading = false;
         },
 
