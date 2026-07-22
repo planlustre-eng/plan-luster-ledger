@@ -38,15 +38,17 @@
     <div class="flex items-center space-x-2">
       <div class="w-2.5 h-2.5 rounded-full" :class="isLoading ? 'bg-japanese-warn animate-ping' : 'bg-japanese-accent'"></div>
       <span class="font-medium tracking-widest text-xs sm:text-sm text-japanese-text">PLAN LUSTRE</span>
-      <button @click="viewMode = viewMode === 'admin' ? 'client' : 'admin'" 
+      
+      <!-- 無 Icon 切換按鈕 (若是獨立業主連結 mode=client 則自動隱藏切換鈕) -->
+      <button x-show="!isClientOnly" @click="viewMode = viewMode === 'admin' ? 'client' : 'admin'" 
               class="ml-1 text-[11px] px-2.5 py-1 rounded-full border border-japanese-accent/60 text-japanese-accent active:bg-japanese-accent active:text-white transition-all font-medium">
-        <span x-text="viewMode === 'admin' ? '👁️ 切換業主視角' : '⚙️ 切換內部管理'"></span>
+        <span x-text="viewMode === 'admin' ? '切換業主視角' : '切換內部管理'"></span>
       </button>
     </div>
 
-    <!-- 選擇案場與新增 -->
+    <!-- 選擇案場與新增案場按鈕 -->
     <div class="flex items-center space-x-2 text-xs">
-      <select class="bg-japanese-bg border border-japanese-border rounded-lg px-2.5 py-1.5 text-xs text-japanese-text focus:outline-none max-w-[130px] sm:max-w-none truncate" x-model="currentProject">
+      <select class="bg-japanese-bg border border-japanese-border rounded-lg px-2.5 py-1.5 text-xs text-japanese-text focus:outline-none max-w-[140px] sm:max-w-none truncate" x-model="currentProject">
         <template x-for="proj in projects" :key="proj.id">
           <option :value="proj.id" x-text="proj.name"></option>
         </template>
@@ -67,11 +69,12 @@
           <button @click="activeTab = 'finance'" :class="activeTab === 'finance' ? 'border-b-2 border-japanese-accent text-japanese-text font-bold py-2' : 'text-japanese-muted py-2'">帳務概況</button>
           <button @click="activeTab = 'schedule'" :class="activeTab === 'schedule' ? 'border-b-2 border-japanese-accent text-japanese-text font-bold py-2' : 'text-japanese-muted py-2'">工程進度表</button>
           <button @click="activeTab = 'defects'" :class="activeTab === 'defects' ? 'border-b-2 border-japanese-accent text-japanese-text font-bold py-2' : 'text-japanese-muted py-2'">業主備註與回覆 (<span x-text="filteredDefects().length"></span>)</button>
+          <button @click="activeTab = 'docs'" :class="activeTab === 'docs' ? 'border-b-2 border-japanese-accent text-japanese-text font-bold py-2' : 'text-japanese-muted py-2'">文件管理</button>
         </div>
 
         <!-- 頁籤 1：帳務概況 -->
         <div x-show="activeTab === 'finance'" class="space-y-6">
-          <!-- 財務看板 (包含金額與毛利率%) -->
+          <!-- 財務看板 -->
           <section class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <div class="bg-japanese-paper border border-japanese-border p-4 rounded-xl shadow-sm">
               <span class="text-[10px] text-japanese-muted block mb-1">CONTRACT / 合約金額</span>
@@ -96,7 +99,6 @@
 
           <!-- 記帳與明細 -->
           <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- 記帳表單 (手機數字鍵盤優化、無下拉品項) -->
             <div class="bg-japanese-paper border border-japanese-border p-5 rounded-xl shadow-sm space-y-4">
               <h2 class="text-xs font-medium tracking-wider text-japanese-text">NEW ENTRY / 新增收支</h2>
               <form @submit.prevent="addEntry()" class="space-y-3">
@@ -107,7 +109,7 @@
 
                 <div>
                   <label class="block text-[10px] text-japanese-muted mb-1">品項說明</label>
-                  <input type="text" x-model="newEntry.item" placeholder="請輸入品項 (如: 木作一期、進口塗料)" required class="w-full bg-japanese-bg border border-japanese-border rounded-lg px-3 py-2 text-xs outline-none focus:border-japanese-accent">
+                  <input type="text" x-model="newEntry.item" placeholder="請輸入品項 (如: 木作一期)" required class="w-full bg-japanese-bg border border-japanese-border rounded-lg px-3 py-2 text-xs outline-none focus:border-japanese-accent">
                 </div>
 
                 <div>
@@ -122,7 +124,7 @@
 
                 <div>
                   <label class="block text-[10px] text-japanese-muted mb-1">經手人 / 廠商備註</label>
-                  <input type="text" x-model="newEntry.partner" placeholder="例如：阿昌師、XX石材" class="w-full bg-japanese-bg border border-japanese-border rounded-lg px-3 py-2 text-xs outline-none">
+                  <input type="text" x-model="newEntry.partner" placeholder="例如：阿昌師" class="w-full bg-japanese-bg border border-japanese-border rounded-lg px-3 py-2 text-xs outline-none">
                 </div>
 
                 <button type="submit" :disabled="isLoading" class="w-full bg-japanese-btn hover:bg-black text-white py-2.5 rounded-lg text-xs font-medium tracking-widest active:scale-98 transition-all cursor-pointer">
@@ -131,7 +133,6 @@
               </form>
             </div>
 
-            <!-- 帳目列表 -->
             <div class="bg-japanese-paper border border-japanese-border p-5 rounded-xl shadow-sm lg:col-span-2 flex flex-col h-[420px]">
               <h2 class="text-xs font-medium tracking-wider text-japanese-text mb-4">LEDGER DETAIL / 帳目明細</h2>
               <div class="flex-1 overflow-y-auto space-y-2 pr-1">
@@ -152,7 +153,7 @@
           </section>
         </div>
 
-        <!-- 頁籤 2：工程進度時間軸 -->
+        <!-- 頁籤 2：工程時間軸 -->
         <div x-show="activeTab === 'schedule'" class="space-y-6">
           <div class="bg-japanese-paper border border-japanese-border p-5 rounded-xl shadow-sm space-y-4">
             <div class="flex justify-between items-center">
@@ -175,7 +176,7 @@
           </div>
         </div>
 
-        <!-- 頁籤 3：業主備註與即時回覆處理 -->
+        <!-- 頁籤 3：業主備註與即時回覆 -->
         <div x-show="activeTab === 'defects'" class="space-y-6">
           <div class="bg-japanese-paper border border-japanese-border p-5 rounded-xl shadow-sm space-y-4">
             <h2 class="text-xs font-medium tracking-wider text-japanese-text">DEFECTS & REPLIES / 業主回報事項與處理</h2>
@@ -193,7 +194,6 @@
                       <option value="已改善">已改善</option>
                     </select>
                   </div>
-                  <!-- 即時回覆輸入框 -->
                   <div class="flex gap-2 pt-2 border-t border-japanese-border/50">
                     <input type="text" x-model="defect.reply" placeholder="輸入給業主的回覆內容..." class="flex-1 bg-white border border-japanese-border rounded px-2.5 py-1 text-xs outline-none">
                     <button @click="updateDefect(defect)" class="bg-japanese-btn text-white px-3 py-1 rounded text-xs shrink-0 active:scale-95">更新狀態</button>
@@ -203,6 +203,28 @@
             </div>
           </div>
         </div>
+
+        <!-- 頁籤 4：新增業主文件下載網址 -->
+        <div x-show="activeTab === 'docs'" class="space-y-6">
+          <div class="bg-japanese-paper border border-japanese-border p-5 rounded-xl shadow-sm space-y-4">
+            <div class="flex justify-between items-center border-b border-japanese-border pb-2">
+              <h2 class="text-xs font-medium tracking-wider text-japanese-text">DOCUMENTS / 業主文件專區</h2>
+              <button @click="showDocModal = true" class="bg-japanese-btn text-white px-3 py-1.5 rounded-lg text-xs font-medium active:scale-95 cursor-pointer">+ 新增文件連結</button>
+            </div>
+            <div class="space-y-2">
+              <template x-for="doc in filteredDocuments()" :key="doc.id">
+                <div class="flex items-center justify-between p-3 bg-japanese-bg rounded-lg border border-japanese-border">
+                  <div>
+                    <span class="text-xs font-medium text-japanese-text" x-text="doc.title"></span>
+                    <span class="text-[10px] text-japanese-muted ml-2" x-text="'[' + doc.category + ']'"></span>
+                  </div>
+                  <a :href="doc.url" target="_blank" class="text-xs text-japanese-accent underline font-medium">開啟連結</a>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
       </div>
     </template>
 
@@ -233,11 +255,11 @@
           </div>
         </div>
 
-        <!-- 區塊 2：施工照片紀錄 (支援手機拍照與相簿上傳) -->
+        <!-- 區塊 2：施工照片紀錄 -->
         <div class="bg-japanese-paper border border-japanese-border p-5 rounded-xl shadow-sm space-y-4">
           <div class="flex justify-between items-center border-b border-japanese-border pb-2">
             <h2 class="text-xs font-medium tracking-wider text-japanese-text">02 / 現場施工照片 PHOTOS</h2>
-            <button @click="showPhotoModal = true" class="bg-japanese-btn text-white px-3 py-1.5 rounded-lg text-xs font-medium active:scale-95 cursor-pointer">📸 上傳照片</button>
+            <button @click="showPhotoModal = true" class="bg-japanese-btn text-white px-3 py-1.5 rounded-lg text-xs font-medium active:scale-95 cursor-pointer">上傳照片</button>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <template x-for="photo in filteredPhotos()" :key="photo.id">
@@ -255,7 +277,7 @@
           </div>
         </div>
 
-        <!-- 區塊 3：瑕疵與現場備註 (含內部回覆) -->
+        <!-- 區塊 3：瑕疵與現場備註 -->
         <div class="bg-japanese-paper border border-japanese-border p-5 rounded-xl shadow-sm space-y-4">
           <div class="flex justify-between items-center border-b border-japanese-border pb-2">
             <h2 class="text-xs font-medium tracking-wider text-japanese-text">03 / 備註與待調整事項 DEFECTS & NOTES</h2>
@@ -269,7 +291,6 @@
                   <span class="text-[10px] px-2 py-0.5 rounded" :class="defect.status === '已改善' ? 'bg-japanese-success/20 text-japanese-success' : 'bg-japanese-warn/20 text-japanese-warn'" x-text="defect.status"></span>
                 </div>
                 <p class="text-xs text-japanese-muted font-light" x-text="defect.note"></p>
-                <!-- 內部即時回覆 -->
                 <template x-if="defect.reply">
                   <div class="bg-white p-2.5 rounded border border-japanese-accent/30 text-xs mt-2">
                     <span class="text-japanese-accent font-medium text-[10px] block">PLAN LUSTRE 團隊回覆：</span>
@@ -280,14 +301,34 @@
             </template>
           </div>
         </div>
+
+        <!-- 區塊 4：文件下載專區 (新增) -->
+        <div class="bg-japanese-paper border border-japanese-border p-5 rounded-xl shadow-sm space-y-4">
+          <h2 class="text-xs font-medium tracking-wider text-japanese-text border-b border-japanese-border pb-2">04 / 相關文件下載 DOCUMENTS</h2>
+          <div class="space-y-2">
+            <template x-for="doc in filteredDocuments()" :key="doc.id">
+              <div class="flex items-center justify-between p-3.5 bg-japanese-bg rounded-lg border border-japanese-border">
+                <div>
+                  <div class="text-xs font-medium text-japanese-text" x-text="doc.title"></div>
+                  <div class="text-[10px] text-japanese-muted mt-0.5" x-text="doc.category"></div>
+                </div>
+                <a :href="doc.url" target="_blank" class="px-3 py-1 bg-japanese-btn text-white text-xs rounded-lg active:scale-95">點擊檢視/下載</a>
+              </div>
+            </template>
+            <template x-if="filteredDocuments().length === 0">
+              <p class="text-xs text-japanese-muted py-2">尚無可供下載的文件。</p>
+            </template>
+          </div>
+        </div>
+
       </div>
     </template>
 
   </main>
 
-  <!-- 🪟 彈跳視窗集合 (Modals) -->
+  <!-- 🪟 Modals -->
 
-  <!-- 新增案場 Modal -->
+  <!-- 新增案場 -->
   <div x-show="showProjectModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" x-cloak>
     <div class="bg-japanese-paper rounded-xl p-6 max-w-sm w-full space-y-4 shadow-xl">
       <h3 class="text-xs font-medium text-japanese-text">NEW PROJECT / 新增案場</h3>
@@ -300,7 +341,7 @@
     </div>
   </div>
 
-  <!-- 新增工程行程 Modal -->
+  <!-- 新增工期 -->
   <div x-show="showScheduleModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" x-cloak>
     <div class="bg-japanese-paper rounded-xl p-6 max-w-sm w-full space-y-4 shadow-xl">
       <h3 class="text-xs font-medium text-japanese-text">NEW SCHEDULE / 新增工期</h3>
@@ -321,21 +362,17 @@
     </div>
   </div>
 
-  <!-- 上傳照片 Modal (支援手機拍照/檔案上傳) -->
+  <!-- 上傳照片 Modal -->
   <div x-show="showPhotoModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" x-cloak>
     <div class="bg-japanese-paper rounded-xl p-6 max-w-sm w-full space-y-4 shadow-xl">
       <h3 class="text-xs font-medium text-japanese-text">UPLOAD PHOTO / 上傳施工照片</h3>
-      
-      <!-- 手機拍照/相簿按鈕 -->
       <div class="space-y-2">
         <label class="block text-[10px] text-japanese-muted">選擇照片 (拍照或相簿)</label>
         <input type="file" accept="image/*" capture="environment" @change="handleFileUpload($event)" class="w-full text-xs text-japanese-muted file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-japanese-btn file:text-white">
       </div>
-
       <input type="text" x-model="newPhoto.category" placeholder="工種 (如: 木作工程)" class="w-full bg-japanese-bg border border-japanese-border rounded-lg px-3 py-2 text-xs outline-none">
       <input type="date" x-model="newPhoto.date" class="w-full bg-japanese-bg border border-japanese-border rounded-lg px-3 py-2 text-xs outline-none">
       <input type="text" x-model="newPhoto.note" placeholder="照片說明備註" class="w-full bg-japanese-bg border border-japanese-border rounded-lg px-3 py-2 text-xs outline-none">
-      
       <div class="flex justify-end space-x-2 pt-2">
         <button @click="showPhotoModal = false" class="px-4 py-2 border border-japanese-border text-xs rounded-lg">取消</button>
         <button @click="addPhoto()" :disabled="!newPhoto.url || isLoading" class="px-4 py-2 bg-japanese-btn text-white text-xs rounded-lg active:scale-95 disabled:bg-japanese-muted">
@@ -345,7 +382,7 @@
     </div>
   </div>
 
-  <!-- 新增瑕疵/備註 Modal -->
+  <!-- 新增瑕疵 Modal -->
   <div x-show="showDefectModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" x-cloak>
     <div class="bg-japanese-paper rounded-xl p-6 max-w-sm w-full space-y-4 shadow-xl">
       <h3 class="text-xs font-medium text-japanese-text">NEW NOTE / 新增調整事項與備註</h3>
@@ -358,64 +395,96 @@
     </div>
   </div>
 
+  <!-- 新增文件連結 Modal -->
+  <div x-show="showDocModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" x-cloak>
+    <div class="bg-japanese-paper rounded-xl p-6 max-w-sm w-full space-y-4 shadow-xl">
+      <h3 class="text-xs font-medium text-japanese-text">NEW DOCUMENT / 新增文件連結</h3>
+      <input type="text" x-model="newDoc.title" placeholder="文件標題 (如: 設計合約書)" class="w-full bg-japanese-bg border border-japanese-border rounded-lg px-3 py-2 text-xs outline-none">
+      <input type="url" x-model="newDoc.url" placeholder="雲端網址 (Google Drive / PDF 等)" class="w-full bg-japanese-bg border border-japanese-border rounded-lg px-3 py-2 text-xs outline-none">
+      <input type="text" x-model="newDoc.category" placeholder="分類 (如: 圖紙, 估價單, 合約)" class="w-full bg-japanese-bg border border-japanese-border rounded-lg px-3 py-2 text-xs outline-none">
+      <div class="flex justify-end space-x-2 pt-2">
+        <button @click="showDocModal = false" class="px-4 py-2 border border-japanese-border text-xs rounded-lg">取消</button>
+        <button @click="addDocument()" class="px-4 py-2 bg-japanese-btn text-white text-xs rounded-lg active:scale-95">新增文件</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="border-t border-japanese-border py-6 text-center text-[10px] text-japanese-muted tracking-widest mt-auto">
     © 2026 PLAN LUSTRE. DESIGNED FOR INNER PEACE AND FINANCIAL CLARITY.
   </footer>
 
   <script>
-    // ⚠️ 請替換為你在第一步「新增部署」中複製的 Google Web App 網址
+    // ⚠️ 請替換為你在 Google Apps Script 發布的最新 Web App 網址
     const API_URL = "https://script.google.com/macros/s/AKfycby4qYqNCSvRldLAk4yY9i7TrJWT1x5uuSv-b8QN5Z2sgdYEcNkYzNB6yUlbxylbsNL_5A/exec";
 
     function lusterApp() {
+      // 檢查網址是否有 ?mode=client
+      const urlParams = new URLSearchParams(window.location.search);
+      const clientModeRequested = urlParams.get('mode') === 'client';
+
       return {
-        viewMode: 'admin',
+        viewMode: clientModeRequested ? 'client' : 'admin',
+        isClientOnly: clientModeRequested, // 若是純業主連結，切換鈕隱藏
         activeTab: 'finance',
-        currentProject: 1,
+        currentProject: '',
         projects: [],
         entries: [],
         schedules: [],
         photos: [],
         defects: [],
+        documents: [],
         isLoading: false,
 
         showProjectModal: false,
         showScheduleModal: false,
         showPhotoModal: false,
         showDefectModal: false,
+        showDocModal: false,
 
         newProject: { name: '', contractAmount: null },
         newEntry: { type: 'expense', item: '', amount: null, date: new Date().toISOString().split('T')[0], partner: '' },
         newSchedule: { task: '', startDate: new Date().toISOString().split('T')[0], endDate: '', status: '未開始' },
         newPhoto: { category: '', date: new Date().toISOString().split('T')[0], url: '', note: '' },
         newDefect: { item: '', status: '待處理', note: '' },
+        newDoc: { title: '', url: '', category: '工程文件' },
 
-        async fetchData() {
-          this.isLoading = true;
-          try {
-            let res = await fetch(`${API_URL}?action=getInitialData`);
-            let data = await res.json();
-            this.projects = data.projects || [];
-            this.entries = data.entries || [];
-            this.schedules = data.schedules || [];
-            this.photos = data.photos || [];
-            this.defects = data.defects || [];
-            if (this.projects.length > 0 && !this.projects.find(p => p.id == this.currentProject)) {
-              this.currentProject = this.projects[0].id;
-            }
-          } catch (e) {
-            console.error("資料載入失敗:", e);
-          } finally {
-            this.isLoading = false;
-          }
+async fetchData() {
+  this.isLoading = true;
+  try {
+    // 🔒 向後台發送請求時，明確告知當前是否為業主模式
+    const requestUrl = this.isClientOnly 
+      ? `${API_URL}?action=getInitialData&mode=client` 
+      : `${API_URL}?action=getInitialData`;
+
+    let res = await fetch(requestUrl);
+    let data = await res.json();
+    this.projects = data.projects || [];
+    this.entries = data.entries || [];
+    this.schedules = data.schedules || [];
+    this.photos = data.photos || [];
+    this.defects = data.defects || [];
+    this.documents = data.documents || [];
+
+    if (this.projects.length > 0 && (!this.currentProject || !this.projects.find(p => String(p.id) === String(this.currentProject)))) {
+      this.currentProject = String(this.projects[0].id);
+    }
+  } catch (e) {
+    console.error("資料載入失敗:", e);
+  } finally {
+    this.isLoading = false;
+  }
+}
+
+        getActiveProject() { 
+          return this.projects.find(p => String(p.id) === String(this.currentProject)) || { contractAmount: 0, receivedAmount: 0 }; 
         },
+        filteredEntries() { return this.entries.filter(i => String(i.projectId) === String(this.currentProject)).sort((a,b) => new Date(b.date)-new Date(a.date)); },
+        filteredSchedules() { return this.schedules.filter(i => String(i.projectId) === String(this.currentProject)).sort((a,b) => new Date(a.startDate)-new Date(b.startDate)); },
+        filteredPhotos() { return this.photos.filter(i => String(i.projectId) === String(this.currentProject)).sort((a,b) => new Date(b.date)-new Date(a.date)); },
+        filteredDefects() { return this.defects.filter(i => String(i.projectId) === String(this.currentProject)); },
+        filteredDocuments() { return this.documents.filter(i => String(i.projectId) === String(this.currentProject)); },
 
-        getActiveProject() { return this.projects.find(p => p.id == this.currentProject) || { contractAmount: 0, receivedAmount: 0 }; },
-        filteredEntries() { return this.entries.filter(i => i.projectId == this.currentProject).sort((a,b) => new Date(b.date)-new Date(a.date)); },
-        filteredSchedules() { return this.schedules.filter(i => i.projectId == this.currentProject).sort((a,b) => new Date(a.startDate)-new Date(b.startDate)); },
-        filteredPhotos() { return this.photos.filter(i => i.projectId == this.currentProject).sort((a,b) => new Date(b.date)-new Date(a.date)); },
-        filteredDefects() { return this.defects.filter(i => i.projectId == this.currentProject); },
-
-        calculateTotalExpenses() { return this.entries.filter(i => i.projectId == this.currentProject && i.type === 'expense').reduce((s, i) => s + Number(i.amount), 0); },
+        calculateTotalExpenses() { return this.filteredEntries().filter(i => i.type === 'expense').reduce((s, i) => s + Number(i.amount), 0); },
         calculateProfit() { return this.getActiveProject().contractAmount - this.calculateTotalExpenses(); },
         calculateProfitMargin() {
           const contract = this.getActiveProject().contractAmount;
@@ -423,31 +492,29 @@
           return Math.round((this.calculateProfit() / contract) * 100);
         },
 
-        // 處理照片檔案並壓縮轉為 Base64
         handleFileUpload(event) {
           const file = event.target.files[0];
           if (!file) return;
           const reader = new FileReader();
-          reader.onload = (e) => {
-            this.newPhoto.url = e.target.result;
-          };
+          reader.onload = (e) => { this.newPhoto.url = e.target.result; };
           reader.readAsDataURL(file);
         },
 
         async addProject() {
           this.isLoading = true;
-          const id = Date.now();
+          const id = String(Date.now());
           const p = { id, name: this.newProject.name, contractAmount: Number(this.newProject.contractAmount), receivedAmount: 0 };
           await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addProject', data: p }) });
           this.projects.push(p);
           this.currentProject = id;
           this.showProjectModal = false;
+          this.newProject.name = ''; this.newProject.contractAmount = null;
           this.isLoading = false;
         },
 
         async addEntry() {
           this.isLoading = true;
-          const e = { id: Date.now(), projectId: Number(this.currentProject), ...this.newEntry };
+          const e = { id: String(Date.now()), projectId: String(this.currentProject), ...this.newEntry };
           await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addEntry', data: e }) });
           this.entries.push(e);
           if (e.type === 'income') this.getActiveProject().receivedAmount += Number(e.amount);
@@ -457,7 +524,7 @@
 
         async addSchedule() {
           this.isLoading = true;
-          const s = { id: Date.now(), projectId: Number(this.currentProject), ...this.newSchedule };
+          const s = { id: String(Date.now()), projectId: String(this.currentProject), ...this.newSchedule };
           await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addSchedule', data: s }) });
           this.schedules.push(s);
           this.showScheduleModal = false;
@@ -466,7 +533,7 @@
 
         async addPhoto() {
           this.isLoading = true;
-          const p = { id: Date.now(), projectId: Number(this.currentProject), ...this.newPhoto };
+          const p = { id: String(Date.now()), projectId: String(this.currentProject), ...this.newPhoto };
           await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addPhoto', data: p }) });
           this.photos.push(p);
           this.showPhotoModal = false;
@@ -476,11 +543,21 @@
 
         async addDefect() {
           this.isLoading = true;
-          const d = { id: Date.now(), projectId: Number(this.currentProject), ...this.newDefect, reply: '' };
+          const d = { id: String(Date.now()), projectId: String(this.currentProject), ...this.newDefect, reply: '' };
           await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addDefect', data: d }) });
           this.defects.push(d);
           this.showDefectModal = false;
           this.newDefect.item = ''; this.newDefect.note = '';
+          this.isLoading = false;
+        },
+
+        async addDocument() {
+          this.isLoading = true;
+          const doc = { id: String(Date.now()), projectId: String(this.currentProject), ...this.newDoc };
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addDocument', data: doc }) });
+          this.documents.push(doc);
+          this.showDocModal = false;
+          this.newDoc.title = ''; this.newDoc.url = '';
           this.isLoading = false;
         },
 
@@ -494,8 +571,8 @@
         async deleteEntry(id) {
           if (!confirm("確定要刪除嗎？")) return;
           this.isLoading = true;
-          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteEntry', id }) });
-          this.entries = this.entries.filter(i => i.id !== id);
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteEntry', id: String(id) }) });
+          this.entries = this.entries.filter(i => String(i.id) !== String(id));
           this.isLoading = false;
         },
 
