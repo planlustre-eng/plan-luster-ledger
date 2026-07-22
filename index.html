@@ -74,7 +74,6 @@
 
         <!-- 頁籤 1：帳務概況 -->
         <div x-show="activeTab === 'finance'" class="space-y-6">
-          <!-- 財務看板 -->
           <section class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <div class="bg-japanese-paper border border-japanese-border p-4 rounded-xl shadow-sm">
               <span class="text-[10px] text-japanese-muted block mb-1">CONTRACT / 合約金額</span>
@@ -97,7 +96,6 @@
             </div>
           </section>
 
-          <!-- 記帳與明細 -->
           <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="bg-japanese-paper border border-japanese-border p-5 rounded-xl shadow-sm space-y-4">
               <h2 class="text-xs font-medium tracking-wider text-japanese-text">NEW ENTRY / 新增收支</h2>
@@ -231,14 +229,12 @@
     <!-- ================== 業主專用視角 (CLIENT VIEW) ================== -->
     <template x-if="viewMode === 'client'">
       <div class="space-y-8">
-        <!-- 歡迎面板 -->
         <div class="bg-japanese-paper border border-japanese-border p-6 rounded-xl text-center space-y-2 shadow-sm">
           <span class="text-[10px] tracking-widest text-japanese-accent font-medium">PROJECT STATUS</span>
           <h1 class="text-lg font-medium text-japanese-text" x-text="getActiveProject().name"></h1>
           <p class="text-xs text-japanese-muted font-light">感謝選擇 PLAN LUSTRE，以下為即時工程進度與現場記錄。</p>
         </div>
 
-        <!-- 區塊 1：施工時間軸 -->
         <div class="bg-japanese-paper border border-japanese-border p-5 rounded-xl shadow-sm space-y-4">
           <h2 class="text-xs font-medium tracking-wider text-japanese-text border-b border-japanese-border pb-2">01 / 工程時間軸 TIMELINE</h2>
           <div class="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-japanese-border">
@@ -255,7 +251,6 @@
           </div>
         </div>
 
-        <!-- 區塊 2：施工照片紀錄 -->
         <div class="bg-japanese-paper border border-japanese-border p-5 rounded-xl shadow-sm space-y-4">
           <div class="flex justify-between items-center border-b border-japanese-border pb-2">
             <h2 class="text-xs font-medium tracking-wider text-japanese-text">02 / 現場施工照片 PHOTOS</h2>
@@ -277,7 +272,6 @@
           </div>
         </div>
 
-        <!-- 區塊 3：瑕疵與現場備註 -->
         <div class="bg-japanese-paper border border-japanese-border p-5 rounded-xl shadow-sm space-y-4">
           <div class="flex justify-between items-center border-b border-japanese-border pb-2">
             <h2 class="text-xs font-medium tracking-wider text-japanese-text">03 / 備註與待調整事項 DEFECTS & NOTES</h2>
@@ -302,7 +296,6 @@
           </div>
         </div>
 
-        <!-- 區塊 4：文件下載專區 (新增) -->
         <div class="bg-japanese-paper border border-japanese-border p-5 rounded-xl shadow-sm space-y-4">
           <h2 class="text-xs font-medium tracking-wider text-japanese-text border-b border-japanese-border pb-2">04 / 相關文件下載 DOCUMENTS</h2>
           <div class="space-y-2">
@@ -414,17 +407,16 @@
   </footer>
 
   <script>
-    // ⚠️ 請替換為你在 Google Apps Script 發布的最新 Web App 網址
+    // ⚠️ 請填入你的 Google Apps Script 最新發布的網址
     const API_URL = "https://script.google.com/macros/s/AKfycby4qYqNCSvRldLAk4yY9i7TrJWT1x5uuSv-b8QN5Z2sgdYEcNkYzNB6yUlbxylbsNL_5A/exec";
 
     function lusterApp() {
-      // 檢查網址是否有 ?mode=client
       const urlParams = new URLSearchParams(window.location.search);
       const clientModeRequested = urlParams.get('mode') === 'client';
 
       return {
         viewMode: clientModeRequested ? 'client' : 'admin',
-        isClientOnly: clientModeRequested, // 若是純業主連結，切換鈕隱藏
+        isClientOnly: clientModeRequested,
         activeTab: 'finance',
         currentProject: '',
         projects: [],
@@ -448,32 +440,31 @@
         newDefect: { item: '', status: '待處理', note: '' },
         newDoc: { title: '', url: '', category: '工程文件' },
 
-async fetchData() {
-  this.isLoading = true;
-  try {
-    // 🔒 向後台發送請求時，明確告知當前是否為業主模式
-    const requestUrl = this.isClientOnly 
-      ? `${API_URL}?action=getInitialData&mode=client` 
-      : `${API_URL}?action=getInitialData`;
+        async fetchData() {
+          this.isLoading = true;
+          try {
+            const requestUrl = this.isClientOnly 
+              ? `${API_URL}?action=getInitialData&mode=client` 
+              : `${API_URL}?action=getInitialData`;
 
-    let res = await fetch(requestUrl);
-    let data = await res.json();
-    this.projects = data.projects || [];
-    this.entries = data.entries || [];
-    this.schedules = data.schedules || [];
-    this.photos = data.photos || [];
-    this.defects = data.defects || [];
-    this.documents = data.documents || [];
+            let res = await fetch(requestUrl);
+            let data = await res.json();
+            this.projects = data.projects || [];
+            this.entries = data.entries || [];
+            this.schedules = data.schedules || [];
+            this.photos = data.photos || [];
+            this.defects = data.defects || [];
+            this.documents = data.documents || [];
 
-    if (this.projects.length > 0 && (!this.currentProject || !this.projects.find(p => String(p.id) === String(this.currentProject)))) {
-      this.currentProject = String(this.projects[0].id);
-    }
-  } catch (e) {
-    console.error("資料載入失敗:", e);
-  } finally {
-    this.isLoading = false;
-  }
-}
+            if (this.projects.length > 0 && (!this.currentProject || !this.projects.find(p => String(p.id) === String(this.currentProject)))) {
+              this.currentProject = String(this.projects[0].id);
+            }
+          } catch (e) {
+            console.error("資料載入失敗:", e);
+          } finally {
+            this.isLoading = false;
+          }
+        },
 
         getActiveProject() { 
           return this.projects.find(p => String(p.id) === String(this.currentProject)) || { contractAmount: 0, receivedAmount: 0 }; 
