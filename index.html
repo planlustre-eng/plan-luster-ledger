@@ -35,7 +35,6 @@
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: #FBFBFA; }
     ::-webkit-scrollbar-thumb { background: #E8E6E1; border-radius: 2px; }
-    /* 隱藏數字鍵盤微調箭頭，讓介面更極簡 */
     input[type=number]::-webkit-inner-spin-button, 
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
@@ -49,13 +48,19 @@
       <div class="w-2 h-2 rounded-full" :class="isLoading ? 'bg-japanese-warn animate-ping' : 'bg-japanese-accent'"></div>
       <span class="font-medium tracking-widest text-sm text-japanese-text">PLAN LUSTRE</span>
       <span class="text-xs text-japanese-muted">|</span>
-      <!-- 模式切換按鈕 -->
-      <button @click="isClient = !isClient" class="text-xs px-2.5 py-1 rounded border border-japanese-border hover:border-japanese-accent text-japanese-text transition-all">
-        <span x-text="isClient ? '👁️ 業主模式 (點擊切換管理模式)' : '⚙️ 管理員模式 (點擊預覽業主視角)'"></span>
+      
+      <!-- 需求1：無 Icon，僅單純文字按鈕 -->
+      <button @click="toggleMode()" class="text-xs px-3 py-1 rounded border border-japanese-border hover:border-japanese-accent text-japanese-text transition-all">
+        <span x-text="isClient ? '管理模式' : '業主模式'"></span>
+      </button>
+
+      <!-- 需求3：一鍵輸出業主專屬網址按鈕 -->
+      <button x-show="!isClient" @click="copyClientLink()" class="text-xs px-3 py-1 rounded bg-japanese-accent/10 text-japanese-accent hover:bg-japanese-accent hover:text-white transition-all font-medium">
+        複製業主連結
       </button>
     </div>
+
     <div class="text-xs text-japanese-muted flex items-center space-x-2">
-      <!-- 需求5：簡化名稱 -->
       <span>案場：</span>
       <select class="bg-transparent border-none focus:ring-0 text-japanese-text font-medium cursor-pointer outline-none" x-model="currentProject">
         <template x-for="proj in projects" :key="proj.id">
@@ -67,9 +72,8 @@
 
   <main class="flex-1 max-w-6xl w-full mx-auto p-6 space-y-8">
     
-    <!-- 第一區：案場概要與損益看板（管理員顯示 / 業主隱藏敏感財務） -->
+    <!-- 第一區：案場概要與損益看板 -->
     <section class="grid grid-cols-1 md:grid-cols-4 gap-6" x-show="!isClient">
-      <!-- 需求6：合約金額可修改 + 數字鍵盤 -->
       <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-2">
         <span class="text-xs text-japanese-muted block tracking-wider">CONTRACT AMOUNT / 合約金額</span>
         <div class="flex items-center space-x-1">
@@ -107,7 +111,7 @@
       </div>
     </section>
 
-    <!-- 需求4：極簡風施工進度時間軸（雙模式共用，管理員可編輯） -->
+    <!-- 施工進度時間軸 -->
     <section class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-6">
       <div class="flex justify-between items-center border-b border-japanese-border/60 pb-4">
         <div>
@@ -116,7 +120,6 @@
         </div>
       </div>
 
-      <!-- 管理員新增進度節點表單 -->
       <form x-show="!isClient" @submit.prevent="addMilestone()" class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-japanese-bg p-4 rounded border border-japanese-border">
         <input type="text" x-model="newMilestone.title" placeholder="進度節點 (例: 泥作完成、系統櫃進場)" required
                class="bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none focus:border-japanese-accent">
@@ -127,7 +130,6 @@
         </button>
       </form>
 
-      <!-- 時間軸本體 -->
       <div class="relative pl-6 space-y-6 before:content-[''] before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-[1px] before:bg-japanese-border">
         <template x-for="item in filteredMilestones()" :key="item.id">
           <div class="relative flex justify-between items-center bg-japanese-bg/50 p-3 rounded border border-japanese-border/40">
@@ -137,7 +139,6 @@
               <div class="text-[10px] text-japanese-muted mt-0.5" x-text="formatDate(item.date)"></div>
             </div>
             <div class="flex items-center space-x-3">
-              <!-- 管理員狀態勾選 -->
               <label x-show="!isClient" class="text-xs text-japanese-muted flex items-center space-x-1 cursor-pointer select-none">
                 <input type="checkbox" x-model="item.completed" @change="toggleMilestone(item.id)" class="accent-japanese-accent">
                 <span>已完成</span>
@@ -150,9 +151,8 @@
       </div>
     </section>
 
-    <!-- 第二區：記帳與明細（僅管理員模式顯示） -->
+    <!-- 第二區：記帳與明細 -->
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-8" x-show="!isClient">
-      <!-- 左側：表單 -->
       <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg h-fit space-y-6">
         <div>
           <h2 class="text-sm font-medium tracking-wider text-japanese-text">NEW ENTRY / 新增收支</h2>
@@ -182,7 +182,6 @@
                    class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-2 text-xs focus:ring-1 focus:ring-japanese-accent focus:border-japanese-accent outline-none text-japanese-text">
           </div>
 
-          <!-- 需求3：金額改為數字鍵盤 -->
           <div>
             <label class="block text-[11px] text-japanese-muted tracking-wider mb-1">AMOUNT / 金額 (NTD)</label>
             <input type="number" inputmode="numeric" pattern="[0-9]*" x-model.number="newEntry.amount" placeholder="NT$" required min="1"
@@ -225,7 +224,6 @@
         </form>
       </div>
 
-      <!-- 右側：帳目明細 -->
       <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg lg:col-span-2 flex flex-col h-[520px]">
         <div class="flex justify-between items-center mb-6">
           <div>
@@ -263,7 +261,7 @@
       </div>
     </section>
 
-    <!-- 第三區：現場施工日誌相簿（需求2：新增、刪除照片與備註） -->
+    <!-- 第三區：現場施工日誌相簿 -->
     <section class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-6">
       <div class="flex justify-between items-center border-b border-japanese-border/60 pb-4">
         <div>
@@ -273,16 +271,20 @@
         <span class="text-xs text-japanese-accent font-medium" x-text="'共 ' + filteredPhotos().length + ' 張照片'"></span>
       </div>
 
-      <!-- 管理員新增照片表單 -->
-      <form x-show="!isClient" @submit.prevent="addPhoto()" class="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-japanese-bg p-4 rounded border border-japanese-border">
-        <input type="url" x-model="newPhoto.url" placeholder="照片網址 (URL)" required
-               class="bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none focus:border-japanese-accent">
-        <input type="text" x-model="newPhoto.note" placeholder="照片備註 (例: 客廳木作壁板完成)"
+      <!-- 需求2：手機拍照 / 相簿直接選擇上傳 -->
+      <form x-show="!isClient" @submit.prevent="uploadAndAddPhoto()" class="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-japanese-bg p-4 rounded border border-japanese-border">
+        <div class="relative">
+          <input type="file" id="photoFileInput" accept="image/*" @change="handleFileSelect($event)" required class="hidden">
+          <label for="photoFileInput" class="w-full flex items-center justify-center bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs text-japanese-text cursor-pointer hover:border-japanese-accent truncate">
+            <span x-text="selectedFileName ? selectedFileName : '選擇照片 / 相機拍攝'"></span>
+          </label>
+        </div>
+        <input type="text" x-model="newPhoto.note" placeholder="照片備註 (例: 客廳木作壁板)"
                class="bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none focus:border-japanese-accent">
         <input type="date" x-model="newPhoto.date" required
                class="bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none focus:border-japanese-accent">
-        <button type="submit" :disabled="isLoading" class="bg-japanese-text text-white text-xs rounded py-2 tracking-wider hover:bg-japanese-accent transition-all">
-          新增照片
+        <button type="submit" :disabled="isLoading" class="bg-japanese-text text-white text-xs rounded py-2 tracking-wider hover:bg-japanese-accent transition-all disabled:bg-japanese-muted">
+          <span x-text="isLoading ? '上傳處理中...' : '上傳照片'"></span>
         </button>
       </form>
 
@@ -300,7 +302,6 @@
                   </div>
                   <div class="p-2.5 bg-japanese-paper flex justify-between items-center">
                     <p class="text-[11px] text-japanese-text truncate font-light" x-text="photo.note || '無備註'"></p>
-                    <!-- 管理員刪除照片按鈕 -->
                     <button x-show="!isClient" @click="deletePhoto(photo.id)" class="text-japanese-muted hover:text-japanese-warn text-xs ml-2 p-1">✕</button>
                   </div>
                 </div>
@@ -352,7 +353,7 @@
     function lusterApp() {
       return {
         currentProject: 1,
-        isClient: false, // 預設為管理員模式
+        isClient: false,
         projects: [{ id: 1, name: '載入中...', contractAmount: 0, receivedAmount: 0 }],
         entries: [],
         photos: [],
@@ -360,13 +361,24 @@
         isLoading: false,
 
         newEntry: { type: 'expense', item: '', amount: null, category: '木作工程', date: new Date().toISOString().split('T')[0], partner: '' },
-        newPhoto: { url: '', note: '', date: new Date().toISOString().split('T')[0] },
+        newPhoto: { note: '', date: new Date().toISOString().split('T')[0] },
+        selectedFileBase64: null,
+        selectedFileName: '',
         newMilestone: { title: '', date: new Date().toISOString().split('T')[0] },
 
         lightbox: { open: false, currentIndex: 0 },
 
         async fetchData() {
           this.isLoading = true;
+          // 自動判斷網址參數是否有 ?mode=client
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('mode') === 'client') {
+            this.isClient = true;
+          }
+          if (urlParams.get('projectId')) {
+            this.currentProject = urlParams.get('projectId');
+          }
+
           try {
             let res = await fetch(`${API_URL}?action=getInitialData`);
             let data = await res.json();
@@ -374,7 +386,9 @@
             this.entries = data.entries || [];
             this.photos = data.photos || [];
             this.milestones = data.milestones || [];
-            if (this.projects.length > 0) this.currentProject = this.projects[0].id;
+            if (!urlParams.get('projectId') && this.projects.length > 0) {
+              this.currentProject = this.projects[0].id;
+            }
           } catch (e) {
             console.error("資料載入失敗:", e);
           } finally {
@@ -382,18 +396,80 @@
           }
         },
 
-        getActiveProject() {
-          return this.projects.find(p => p.id == this.currentProject) || { contractAmount: 0, receivedAmount: 0 };
+        toggleMode() {
+          this.isClient = !this.isClient;
         },
 
-        filteredEntries() {
-          return this.entries.filter(item => item.projectId == this.currentProject).sort((a, b) => new Date(b.date) - new Date(a.date));
+        // 需求3：一鍵生成並複製給業主的專屬網址
+        copyClientLink() {
+          const url = new URL(window.location.href);
+          url.searchParams.set('mode', 'client');
+          url.searchParams.set('projectId', this.currentProject);
+          navigator.clipboard.writeText(url.toString()).then(() => {
+            alert("業主專屬連結已複製到剪貼簿！\n" + url.toString());
+          }).catch(() => {
+            prompt("請複製以下連結給業主：", url.toString());
+          });
         },
 
-        filteredPhotos() {
-          return this.photos.filter(item => item.projectId == this.currentProject).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+        // 需求2：讀取圖片檔轉 Base64
+        handleFileSelect(e) {
+          const file = e.target.files[0];
+          if (file) {
+            this.selectedFileName = file.name;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+              this.selectedFileBase64 = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+          }
         },
 
+        // 需求2：上傳圖片至 Google Drive 並新增
+        async uploadAndAddPhoto() {
+          if (!this.selectedFileBase64) {
+            alert("請選擇照片檔或使用相機拍照");
+            return;
+          }
+          this.isLoading = true;
+          const photoToAdd = {
+            id: Date.now(),
+            projectId: Number(this.currentProject),
+            base64Data: this.selectedFileBase64,
+            fileName: this.selectedFileName,
+            note: this.newPhoto.note,
+            date: this.newPhoto.date
+          };
+
+          try {
+            let res = await fetch(API_URL, {
+              method: 'POST',
+              body: JSON.stringify({ action: 'addPhoto', data: photoToAdd })
+            });
+            let result = await res.json();
+            if (result.success) {
+              this.photos.unshift({
+                id: photoToAdd.id,
+                projectId: photoToAdd.projectId,
+                url: result.url,
+                note: photoToAdd.note,
+                date: photoToAdd.date
+              });
+              this.newPhoto.note = '';
+              this.selectedFileBase64 = null;
+              this.selectedFileName = '';
+              document.getElementById('photoFileInput').value = '';
+            }
+          } catch (e) {
+            alert("照片上傳失敗，請稍後再試");
+          } finally {
+            this.isLoading = false;
+          }
+        },
+
+        getActiveProject() { return this.projects.find(p => p.id == this.currentProject) || { contractAmount: 0, receivedAmount: 0 }; },
+        filteredEntries() { return this.entries.filter(item => item.projectId == this.currentProject).sort((a, b) => new Date(b.date) - new Date(a.date)); },
+        filteredPhotos() { return this.photos.filter(item => item.projectId == this.currentProject).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)); },
         groupedPhotos() {
           const sorted = this.filteredPhotos();
           const groups = {};
@@ -404,83 +480,38 @@
           });
           return groups;
         },
+        filteredMilestones() { return this.milestones.filter(m => m.projectId == this.currentProject).sort((a, b) => new Date(a.date) - new Date(b.date)); },
 
-        filteredMilestones() {
-          return this.milestones.filter(m => m.projectId == this.currentProject).sort((a, b) => new Date(a.date) - new Date(b.date));
-        },
-
-        // 修改合約金額
         async updateProjectContractAmount() {
           const proj = this.getActiveProject();
           try {
-            await fetch(API_URL, {
-              method: 'POST',
-              body: JSON.stringify({ action: 'updateContractAmount', id: proj.id, amount: proj.contractAmount })
-            });
-          } catch (e) {
-            alert("合約金額同步失敗");
-          }
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateContractAmount', id: proj.id, amount: proj.contractAmount }) });
+          } catch (e) { alert("合約金額同步失敗"); }
         },
 
-        // 新增照片
-        async addPhoto() {
-          this.isLoading = true;
-          const photoToAdd = { id: Date.now(), projectId: Number(this.currentProject), ...this.newPhoto };
-          try {
-            let res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addPhoto', data: photoToAdd }) });
-            let result = await res.json();
-            if (result.success) {
-              this.photos.unshift(photoToAdd);
-              this.newPhoto.url = '';
-              this.newPhoto.note = '';
-            }
-          } catch (e) {
-            alert("照片新增失敗");
-          } finally {
-            this.isLoading = false;
-          }
-        },
-
-        // 刪除照片
         async deletePhoto(id) {
           if (!confirm("確定要刪除這張照片嗎？")) return;
           this.isLoading = true;
           try {
             let res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deletePhoto', id: id }) });
             let result = await res.json();
-            if (result.success) {
-              this.photos = this.photos.filter(p => p.id !== id);
-            }
-          } catch (e) {
-            alert("刪除失敗");
-          } finally {
-            this.isLoading = false;
-          }
+            if (result.success) { this.photos = this.photos.filter(p => p.id !== id); }
+          } catch (e) { alert("刪除失敗"); } finally { this.isLoading = false; }
         },
 
-        // 新增施工進度
         async addMilestone() {
           this.isLoading = true;
           const milestoneToAdd = { id: Date.now(), projectId: Number(this.currentProject), completed: false, ...this.newMilestone };
           try {
             let res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addMilestone', data: milestoneToAdd }) });
             let result = await res.json();
-            if (result.success) {
-              this.milestones.push(milestoneToAdd);
-              this.newMilestone.title = '';
-            }
-          } catch (e) {
-            alert("進度新增失敗");
-          } finally {
-            this.isLoading = false;
-          }
+            if (result.success) { this.milestones.push(milestoneToAdd); this.newMilestone.title = ''; }
+          } catch (e) { alert("進度新增失敗"); } finally { this.isLoading = false; }
         },
 
         async toggleMilestone(id) {
           const item = this.milestones.find(m => m.id === id);
-          if (item) {
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'toggleMilestone', id: id, completed: item.completed }) });
-          }
+          if (item) { await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'toggleMilestone', id: id, completed: item.completed }) }); }
         },
 
         async deleteMilestone(id) {
@@ -489,14 +520,10 @@
           await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteMilestone', id: id }) });
         },
 
-        // Lightbox
         openLightboxByPhoto(photo) {
           const list = this.filteredPhotos();
           const index = list.findIndex(p => p.id === photo.id);
-          if (index !== -1) {
-            this.lightbox.currentIndex = index;
-            this.lightbox.open = true;
-          }
+          if (index !== -1) { this.lightbox.currentIndex = index; this.lightbox.open = true; }
         },
         closeLightbox() { this.lightbox.open = false; },
         currentLightboxPhoto() { return this.filteredPhotos()[this.lightbox.currentIndex] || {}; },
