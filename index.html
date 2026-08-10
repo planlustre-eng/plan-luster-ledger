@@ -206,19 +206,11 @@
       </div>
     </section>
 
-    <!-- 需求 1：工程追加減項目專屬區塊 (業主與管理模式均可檢視，自動統計金額) -->
+<!-- 工程追加減項目專屬區塊 (僅列出項目與金額，不進行總額計算) -->
     <section class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-6">
-      <div class="flex justify-between items-end border-b border-japanese-border/60 pb-4">
-        <div>
-          <h2 class="text-sm font-medium tracking-wider text-japanese-text">VARIATIONS / 工程追加減項目</h2>
-          <p class="text-xs text-japanese-muted mt-1 font-light">統計施工過程中新增或減項之工程項目與金額變更</p>
-        </div>
-        <!-- 追加減金額小計統計 -->
-        <div class="text-right flex space-x-4 text-xs">
-          <div><span class="text-japanese-muted">追加小計：</span><span class="text-japanese-warn font-medium" x-text="'+$' + formatNumber(calculateVariationTotal('add'))"></span></div>
-          <div><span class="text-japanese-muted">追減小計：</span><span class="text-japanese-success font-medium" x-text="'-$' + formatNumber(calculateVariationTotal('reduce'))"></span></div>
-          <div><span class="text-japanese-muted">淨追加減：</span><span class="font-medium text-japanese-accent" x-text="'$' + formatNumber(calculateVariationNet())"></span></div>
-        </div>
+      <div class="border-b border-japanese-border/60 pb-4">
+        <h2 class="text-sm font-medium tracking-wider text-japanese-text">VARIATIONS / 工程追加減項目</h2>
+        <p class="text-xs text-japanese-muted mt-1 font-light">施工過程中新增或減項之工程項目明細</p>
       </div>
 
       <!-- 管理模式：新增追加減 -->
@@ -232,7 +224,7 @@
         <button type="submit" :disabled="isLoading" class="bg-japanese-text text-white text-xs rounded py-2 hover:bg-japanese-accent transition-all">登錄追加減</button>
       </form>
 
-      <!-- 追加減列表 -->
+      <!-- 追加減明細列表 (純條列) -->
       <div class="space-y-2">
         <template x-for="item in filteredVariations()" :key="item.id">
           <div class="flex items-center justify-between p-3 bg-japanese-bg rounded border border-japanese-border/40 text-xs">
@@ -245,6 +237,9 @@
               <button x-show="!isClient" @click="deleteVariationItem(item.id)" class="text-japanese-muted hover:text-japanese-warn">✕</button>
             </div>
           </div>
+        </template>
+        <template x-if="filteredVariations().length === 0">
+          <div class="text-center py-4 text-xs text-japanese-muted font-light">尚無追加減項目</div>
         </template>
       </div>
     </section>
