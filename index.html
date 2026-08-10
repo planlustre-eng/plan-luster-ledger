@@ -10,7 +10,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh-tw.js"></script>
   <script>
@@ -42,7 +41,6 @@
       <span class="font-medium tracking-widest text-sm text-japanese-text">PLAN LUSTRE</span>
       <span class="text-xs text-japanese-muted">|</span>
       
-      <!-- 需求 3：精簡模式標題為四個字，防止版面擠壓亂掉 -->
       <button x-show="!isClientLink" @click="toggleMode()" class="text-xs px-3 py-1 rounded border border-japanese-border hover:border-japanese-accent text-japanese-text transition-all">
         <span x-text="isClient ? '管理模式' : '業主模式'"></span>
       </button>
@@ -53,7 +51,6 @@
       <span x-show="isClientLink" class="text-xs px-2.5 py-0.5 rounded bg-japanese-accent/10 text-japanese-accent font-medium">業主模式</span>
     </div>
 
-    <!-- 案場選擇器 -->
     <div class="text-xs text-japanese-muted flex items-center space-x-2">
       <span>案場：</span>
       <template x-if="!isClientLink">
@@ -94,13 +91,11 @@
       </div>
     </section>
 
-    <!-- 需求 2 & 需求 4：業主模式專屬看板 (對調標題與內文，並加入小字未收款項統計) -->
+    <!-- 業主模式專屬看板 -->
     <section class="grid grid-cols-1 md:grid-cols-2 gap-6" x-show="isClient">
       <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg flex flex-col justify-between">
         <div>
-          <!-- 需求 4：案場名稱加大放置於上方 -->
           <div class="text-xl font-medium text-japanese-text" x-text="getActiveProject().name"></div>
-          <!-- 需求 4：款項標題調整置於下方 -->
           <span class="text-xs text-japanese-muted block mt-1 tracking-wider">PROJECT STATUS / 施工中案場</span>
         </div>
         <div class="text-xs text-japanese-success mt-4">● 正常工期進行中</div>
@@ -111,7 +106,6 @@
           <span class="text-xs text-japanese-muted block tracking-wider">RECEIVED AMOUNT / 已繳請款總額</span>
           <div class="text-3xl font-light text-japanese-accent mt-1" x-text="'$ ' + formatNumber(getActiveProject().receivedAmount)"></div>
         </div>
-        <!-- 需求 2：業主模式列出 未收款項 (合約金額 - 已付款項 = 未收款項) 小字設計 -->
         <div class="pt-3 border-t border-japanese-border/60 flex justify-between items-center text-xs text-japanese-muted">
           <span>合約總額: <strong class="text-japanese-text" x-text="'$' + formatNumber(getActiveProject().contractAmount)"></strong></span>
           <span class="text-japanese-warn font-medium">未收尾款: <strong x-text="'$' + formatNumber(getActiveProject().contractAmount - getActiveProject().receivedAmount)"></strong></span>
@@ -119,7 +113,7 @@
       </div>
     </section>
 
-    <!-- 需求 4：施工進度時間軸 (置於上方) -->
+    <!-- 施工進度時間軸 -->
     <section class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-6">
       <div class="border-b border-japanese-border/60 pb-4">
         <h2 class="text-sm font-medium tracking-wider text-japanese-text">PROGRESS SCHEDULE / 施工進度時間軸</h2>
@@ -151,16 +145,15 @@
       </div>
     </section>
 
-    <!-- 需求 4：圖面與檔案區塊 (置於下方) -->
+    <!-- 圖面與檔案區塊 -->
     <section class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-6">
       <div class="border-b border-japanese-border/60 pb-4">
         <h2 class="text-sm font-medium tracking-wider text-japanese-text">DOCUMENTS & DRAWINGS / 案場圖面與檔案</h2>
-        <p class="text-xs text-japanese-muted mt-1 font-light">點擊檔案即可檢視 PDF 施工圖或設計圖說</p>
       </div>
 
       <form x-show="!isClient" @submit.prevent="uploadDocument()" class="space-y-3 bg-japanese-bg p-4 rounded border border-japanese-border">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <input type="text" x-model="newDoc.title" placeholder="圖面名稱 (例: 平面配置圖_v2)" required class="bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none">
+          <input type="text" x-model="newDoc.title" placeholder="圖面名稱" required class="bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none">
           <select x-model="newDoc.category" class="bg-japanese-paper border border-japanese-border rounded px-2 py-2 text-xs outline-none">
             <option value="施工圖">施工圖</option>
             <option value="3D示意圖">3D示意圖</option>
@@ -168,8 +161,8 @@
             <option value="其他文件">其他文件</option>
           </select>
           <div class="flex rounded border border-japanese-border overflow-hidden bg-japanese-paper">
-            <button type="button" @click="docUploadType = 'link'" :class="docUploadType === 'link' ? 'bg-japanese-text text-white' : 'text-japanese-muted'" class="flex-1 text-[11px] py-1.5 transition-all">雲端網址</button>
-            <button type="button" @click="docUploadType = 'file'" :class="docUploadType === 'file' ? 'bg-japanese-text text-white' : 'text-japanese-muted'" class="flex-1 text-[11px] py-1.5 transition-all">上傳 PDF 檔</button>
+            <button type="button" @click="docUploadType = 'link'" :class="docUploadType === 'link' ? 'bg-japanese-text text-white' : 'text-japanese-muted'" class="flex-1 text-[11px] py-1.5">雲端網址</button>
+            <button type="button" @click="docUploadType = 'file'" :class="docUploadType === 'file' ? 'bg-japanese-text text-white' : 'text-japanese-muted'" class="flex-1 text-[11px] py-1.5">上傳 PDF 檔</button>
           </div>
         </div>
 
@@ -183,10 +176,9 @@
             </div>
           </template>
           <template x-if="docUploadType === 'link'">
-            <input type="url" x-model="newDoc.directUrl" placeholder="請貼上 Google Drive 分享連結 (https://...)" class="flex-1 bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none">
+            <input type="url" x-model="newDoc.directUrl" placeholder="請貼上 Google Drive 連結..." class="flex-1 bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none">
           </template>
-
-          <button type="submit" :disabled="isLoading" class="bg-japanese-accent text-white text-xs px-6 py-2 rounded tracking-wider hover:opacity-90 transition-all">新增圖面</button>
+          <button type="submit" :disabled="isLoading" class="bg-japanese-accent text-white text-xs px-6 py-2 rounded tracking-wider">新增圖面</button>
         </div>
       </form>
 
@@ -206,25 +198,22 @@
       </div>
     </section>
 
-<!-- 工程追加減項目專屬區塊 (條列明細 + 底部虛線小計) -->
+    <!-- 工程追加減項目 (明細 + 虛線小計) -->
     <section class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-6">
       <div class="border-b border-japanese-border/60 pb-4">
         <h2 class="text-sm font-medium tracking-wider text-japanese-text">VARIATIONS / 工程追加減項目</h2>
-        <p class="text-xs text-japanese-muted mt-1 font-light">施工過程中新增或減項之工程項目明細</p>
       </div>
 
-      <!-- 管理模式：新增追加減 -->
       <form x-show="!isClient" @submit.prevent="addVariationItem()" class="grid grid-cols-1 sm:grid-cols-5 gap-3 bg-japanese-bg p-4 rounded border border-japanese-border">
         <select x-model="newVariation.type" class="bg-japanese-paper border border-japanese-border rounded px-2 py-2 text-xs outline-none">
           <option value="add">追加 (+)</option>
           <option value="reduce">追減 (-)</option>
         </select>
-        <input type="text" x-model="newVariation.item" placeholder="項目名稱 (例: 插座新增x2)" required class="sm:col-span-2 bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none">
+        <input type="text" x-model="newVariation.item" placeholder="項目名稱" required class="sm:col-span-2 bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none">
         <input type="number" x-model.number="newVariation.amount" placeholder="金額" required class="bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none">
         <button type="submit" :disabled="isLoading" class="bg-japanese-text text-white text-xs rounded py-2 hover:bg-japanese-accent transition-all">登錄追加減</button>
       </form>
 
-      <!-- 追加減明細列表 -->
       <div class="space-y-2">
         <template x-for="item in filteredVariations()" :key="item.id">
           <div class="flex items-center justify-between p-3 bg-japanese-bg rounded border border-japanese-border/40 text-xs">
@@ -239,11 +228,6 @@
           </div>
         </template>
 
-        <template x-if="filteredVariations().length === 0">
-          <div class="text-center py-4 text-xs text-japanese-muted font-light">尚無追加減項目</div>
-        </template>
-
-        <!-- 虛線與微型小計區塊 -->
         <template x-if="filteredVariations().length > 0">
           <div class="pt-3 mt-3 border-t border-dashed border-japanese-border/80 flex justify-end items-center space-x-2 text-[11px]">
             <span class="text-japanese-muted">淨追加減小計：</span>
@@ -259,23 +243,20 @@
         <h2 class="text-sm font-medium tracking-wider text-japanese-text">SITE FEEDBACK / 現場反饋與問題提問</h2>
       </div>
 
-      <!-- 提問表單：管理與業主模式均可使用與上傳照片 -->
       <form @submit.prevent="addDefectFeedback()" class="space-y-3 bg-japanese-bg p-4 rounded border border-japanese-border">
-        <input type="text" x-model="newDefect.item" placeholder="問題標題 (例: 主臥插座位置確認)" required class="w-full bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none">
+        <input type="text" x-model="newDefect.item" placeholder="問題標題" required class="w-full bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none">
         <textarea x-model="newDefect.note" placeholder="詳細說明內容..." class="w-full bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none h-16"></textarea>
         <div class="flex justify-between items-center">
-          <!-- 修正 2：開放業主模式也可選取照片 -->
           <div class="relative">
             <input type="file" id="defectFileInput" accept="image/*" @change="handleDefectPhotoSelect($event)" class="hidden">
             <label for="defectFileInput" class="inline-block bg-japanese-paper border border-japanese-border rounded px-3 py-1.5 text-xs text-japanese-muted cursor-pointer hover:border-japanese-accent transition-all">
               <span x-text="selectedDefectPhotoName ? selectedDefectPhotoName : '📷 附上照片 (可選)'"></span>
             </label>
           </div>
-          <button type="submit" :disabled="isLoading" class="bg-japanese-accent text-white text-xs px-4 py-2 rounded hover:opacity-90 transition-all">送出反饋</button>
+          <button type="submit" :disabled="isLoading" class="bg-japanese-accent text-white text-xs px-4 py-2 rounded">送出反饋</button>
         </div>
       </form>
 
-      <!-- 反饋列表 -->
       <div class="space-y-4">
         <template x-for="item in filteredDefects()" :key="item.id">
           <div class="bg-japanese-bg border border-japanese-border/60 p-4 rounded-lg space-y-3 relative">
@@ -287,50 +268,44 @@
               <div class="flex items-center space-x-2 shrink-0">
                 <template x-if="!isClient">
                   <select x-model="item.status" @change="updateDefectStatus(item)" class="text-xs bg-japanese-paper border border-japanese-border rounded px-2 py-1 outline-none font-medium">
-                    <option value="待處理">待處理</option>
-                    <option value="處理中">處理中</option>
-                    <option value="已處理">已處理</option>
+                    <option value="待處理">🔴 待處理</option>
+                    <option value="處理中">🟡 處理中</option>
+                    <option value="已處理">🟢 已處理</option>
                   </select>
                 </template>
                 <template x-if="isClient">
                   <span class="text-xs px-2.5 py-1 rounded font-medium" :class="item.status === '已處理' ? 'bg-japanese-success/10 text-japanese-success' : (item.status === '處理中' ? 'bg-japanese-warn/20 text-japanese-warn' : 'bg-red-50 text-red-500')" x-text="item.status"></span>
                 </template>
-
-                <!-- 修正 1：管理模式新增刪除按鈕 -->
-                <button x-show="!isClient" @click="deleteDefectItem(item.id)" class="text-japanese-muted hover:text-japanese-warn text-xs pl-1">✕</button>
+                
+                <!-- 強化刪除觸發按鈕 -->
+                <button x-show="!isClient" type="button" @click.prevent="deleteDefectItem(item.id)" class="text-japanese-muted hover:text-japanese-warn text-xs p-1">✕</button>
               </div>
             </div>
 
             <template x-if="item.url">
               <div class="w-24 h-24 rounded border border-japanese-border overflow-hidden bg-white">
-                <img :src="item.url" @click="openSingleImage(item.url)" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-all">
+                <img :src="item.url" @click="openSingleImage(item.url)" class="w-full h-full object-cover cursor-pointer">
               </div>
             </template>
 
-            <!-- 團隊回覆區塊 -->
             <div x-show="item.reply || !isClient" class="pt-2 border-t border-japanese-border/40 text-xs space-y-2">
               <div class="text-japanese-muted font-medium">團隊回覆：</div>
               <template x-if="!isClient">
-                <!-- 修正 3：防止回覆框與按鈕超出格子 -->
                 <div class="flex flex-wrap sm:flex-nowrap gap-2 w-full">
-                  <input type="text" x-model="item.reply" placeholder="輸入處置回覆..." class="flex-1 min-w-0 bg-japanese-paper border border-japanese-border rounded px-2 py-1.5 text-xs outline-none focus:border-japanese-accent">
-                  <button @click="updateDefectStatus(item)" class="bg-japanese-text text-white px-3 py-1.5 rounded text-[11px] shrink-0 hover:bg-japanese-accent transition-all">更新</button>
+                  <input type="text" x-model="item.reply" placeholder="輸入處置回覆..." class="flex-1 min-w-0 bg-japanese-paper border border-japanese-border rounded px-2 py-1.5 text-xs outline-none">
+                  <button @click="updateDefectStatus(item)" class="bg-japanese-text text-white px-3 py-1.5 rounded text-[11px] shrink-0">更新</button>
                 </div>
               </template>
               <template x-if="isClient && item.reply">
-                <p class="text-japanese-text bg-japanese-paper p-2 rounded border border-japanese-border/40 font-light" x-text="item.reply"></p>
+                <p class="text-japanese-text bg-japanese-paper p-2 rounded border border-japanese-border/40" x-text="item.reply"></p>
               </template>
             </div>
           </div>
         </template>
-
-        <template x-if="filteredDefects().length === 0">
-          <div class="text-center py-6 text-xs text-japanese-muted font-light">尚無反饋紀錄</div>
-        </template>
       </div>
     </section>
 
-    <!-- 內部收支明細 (僅管理模式可見) -->
+    <!-- 內部收支明細 (管理模式專屬) -->
     <section x-show="!isClient" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg h-fit space-y-4">
         <h2 class="text-sm font-medium tracking-wider text-japanese-text">NEW ENTRY / 新增收支</h2>
@@ -372,40 +347,28 @@
   </footer>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycby4qYqNCSvRldLAk4yY9i7TrJWT1x5uuSv-b8QN5Z2sgdYEcNkYzNB6yUlbxylbsNL_5A/exec";
+    // ⚠️ 請填入您自己的 Google Apps Script 部署網址
+    const API_URL = "請在此處貼上您的GoogleAppsScript網址";
 
     function lusterApp() {
       return {
-        currentProject: "1",
-        isClient: false,
-        isClientLink: false,
-        projects: [], entries: [], schedules: [], defects: [], documents: [], variations: [],
-        isLoading: false,
+        currentProject: "1", isClient: false, isClientLink: false,
+        projects: [], entries: [], schedules: [], defects: [], documents: [], variations: [], isLoading: false,
 
         newEntry: { type: 'expense', item: '', amount: null, date: new Date().toISOString().split('T')[0] },
         newSchedule: { task: '', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0], status: '進行中' },
         newVariation: { type: 'add', item: '', amount: null },
-        
-        newDefect: { item: '', note: '', base64Photo: '', photoName: '' },
-        selectedDefectPhotoName: '',
-        
-        docUploadType: 'link',
-        newDoc: { title: '', category: '施工圖', base64Data: '', fileName: '', directUrl: '' },
-        selectedDocName: '',
+        newDefect: { item: '', note: '', base64Photo: '', photoName: '' }, selectedDefectPhotoName: '',
+        docUploadType: 'link', newDoc: { title: '', category: '施工圖', base64Data: '', fileName: '', directUrl: '' }, selectedDocName: '',
 
         async fetchData() {
           this.isLoading = true;
           const urlParams = new URLSearchParams(window.location.search);
-          if (urlParams.get('mode') === 'client') {
-            this.isClient = true;
-            this.isClientLink = true;
-          }
-          if (urlParams.get('projectId')) {
-            this.currentProject = String(urlParams.get('projectId'));
-          }
+          if (urlParams.get('mode') === 'client') { this.isClient = true; this.isClientLink = true; }
+          if (urlParams.get('projectId')) { this.currentProject = String(urlParams.get('projectId')); }
 
           try {
-            let res = await fetch(`${API_URL}?action=getInitialData&mode=${this.isClient ? 'client' : 'admin'}`);
+            let res = await fetch(`${API_URL}?mode=${this.isClient ? 'client' : 'admin'}`);
             let data = await res.json();
             this.projects = data.projects || [];
             this.entries = data.entries || [];
@@ -413,13 +376,8 @@
             this.defects = data.defects || [];
             this.documents = data.documents || [];
             this.variations = data.variations || [];
-            
-            if (!urlParams.get('projectId') && this.projects.length > 0) {
-              this.currentProject = String(this.projects[0].id);
-            }
-          } catch (e) {
-            console.error("資料載入失敗:", e);
-          } finally {
+            if (!urlParams.get('projectId') && this.projects.length > 0) this.currentProject = String(this.projects[0].id);
+          } catch (e) { alert("連線失敗，請檢查網址與部署權限"); } finally {
             this.isLoading = false;
             this.$nextTick(() => {
               flatpickr.localize(flatpickr.l10ns.zh_tw);
@@ -445,32 +403,26 @@
         filteredDocuments() { return this.documents.filter(i => String(i.projectId) === String(this.currentProject)); },
         filteredVariations() { return this.variations.filter(i => String(i.projectId) === String(this.currentProject)); },
 
-        // 追加減算數邏輯
-        calculateVariationTotal(type) {
-          return this.filteredVariations().filter(v => v.type === type).reduce((sum, v) => sum + Number(v.amount), 0);
-        },
         calculateVariationNet() {
-          return this.calculateVariationTotal('add') - this.calculateVariationTotal('reduce');
-        },
-        async addVariationItem() {
-          this.isLoading = true;
-          const varToAdd = { id: Date.now(), projectId: String(this.currentProject), ...this.newVariation };
-          try {
-            let res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addVariation', data: varToAdd }) });
-            let result = await res.json();
-            if (result.success) {
-              this.variations.push(varToAdd);
-              this.newVariation.item = '';
-              this.newVariation.amount = null;
-            }
-          } catch (e) { alert("追加減登錄失敗"); } finally { this.isLoading = false; }
-        },
-        async deleteVariationItem(id) {
-          this.variations = this.variations.filter(v => v.id !== id);
-          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteVariation', id: id }) });
+          const v = this.filteredVariations();
+          const add = v.filter(i => i.type === 'add').reduce((s, i) => s + Number(i.amount), 0);
+          const reduce = v.filter(i => i.type === 'reduce').reduce((s, i) => s + Number(i.amount), 0);
+          return add - reduce;
         },
 
-        // PDF 與檔案上傳
+        async addVariationItem() {
+          this.isLoading = true;
+          const varToAdd = { id: String(Date.now()), projectId: String(this.currentProject), ...this.newVariation };
+          try {
+            let res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addVariation', data: varToAdd }) });
+            if ((await res.json()).success) { this.variations.push(varToAdd); this.newVariation.item = ''; this.newVariation.amount = null; }
+          } catch (e) { alert("失敗"); } finally { this.isLoading = false; }
+        },
+        async deleteVariationItem(id) {
+          this.variations = this.variations.filter(v => String(v.id) !== String(id));
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteVariation', id: String(id) }) });
+        },
+
         handleDocFileSelect(e) {
           const file = e.target.files[0];
           if (file) {
@@ -482,38 +434,24 @@
         },
 
         async uploadDocument() {
-          if (this.docUploadType === 'file' && !this.newDoc.base64Data) return alert("請選擇 PDF 檔案！");
-          if (this.docUploadType === 'link' && !this.newDoc.directUrl) return alert("請貼上 Google 雲端網址！");
-          
           this.isLoading = true;
-          const docToAdd = {
-            id: Date.now(),
-            projectId: String(this.currentProject),
-            title: this.newDoc.title,
-            category: this.newDoc.category,
-            uploadType: this.docUploadType,
-            base64Data: this.docUploadType === 'file' ? this.newDoc.base64Data : '',
-            fileName: this.selectedDocName,
-            directUrl: this.docUploadType === 'link' ? this.newDoc.directUrl : ''
-          };
-
+          const docToAdd = { id: String(Date.now()), projectId: String(this.currentProject), title: this.newDoc.title, category: this.newDoc.category, uploadType: this.docUploadType, base64Data: this.docUploadType === 'file' ? this.newDoc.base64Data : '', fileName: this.selectedDocName, directUrl: this.docUploadType === 'link' ? this.newDoc.directUrl : '' };
           try {
             let res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addDocument', data: docToAdd }) });
             let result = await res.json();
             if (result.success) {
               this.documents.push({ id: docToAdd.id, projectId: docToAdd.projectId, title: docToAdd.title, category: docToAdd.category, url: result.url });
               this.newDoc.title = ''; this.newDoc.directUrl = ''; this.selectedDocName = ''; this.newDoc.base64Data = '';
-            } else alert("上傳失敗: " + result.error);
-          } catch (e) { alert("連線失敗"); } finally { this.isLoading = false; }
+            }
+          } catch (e) { alert("上傳失敗"); } finally { this.isLoading = false; }
         },
 
         async deleteDocument(id) {
-          if (!confirm("確定要刪除這份圖面檔案？")) return;
-          this.documents = this.documents.filter(d => d.id !== id);
-          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteDocument', id: id }) });
+          if (!confirm("確定要刪除？")) return;
+          this.documents = this.documents.filter(d => String(d.id) !== String(id));
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteDocument', id: String(id) }) });
         },
 
-        // 反饋處理
         handleDefectPhotoSelect(e) {
           const file = e.target.files[0];
           if (file) {
@@ -526,7 +464,7 @@
 
         async addDefectFeedback() {
           this.isLoading = true;
-          const dataToAdd = { id: Date.now(), projectId: String(this.currentProject), item: this.newDefect.item, note: this.newDefect.note, status: '待處理', base64Photo: this.newDefect.base64Photo, photoName: this.selectedDefectPhotoName };
+          const dataToAdd = { id: String(Date.now()), projectId: String(this.currentProject), item: this.newDefect.item, note: this.newDefect.note, status: '待處理', base64Photo: this.newDefect.base64Photo, photoName: this.selectedDefectPhotoName };
           try {
             let res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addDefect', data: dataToAdd }) });
             let result = await res.json();
@@ -534,57 +472,65 @@
               this.defects.unshift({ id: dataToAdd.id, projectId: dataToAdd.projectId, item: dataToAdd.item, note: dataToAdd.note, status: '待處理', url: result.url || '', reply: '' });
               this.newDefect.item = ''; this.newDefect.note = ''; this.selectedDefectPhotoName = ''; this.newDefect.base64Photo = '';
             }
-          } catch (e) { alert("反饋送出失敗"); } finally { this.isLoading = false; }
+          } catch (e) { alert("失敗"); } finally { this.isLoading = false; }
         },
 
         async updateDefectStatus(item) {
-          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateDefect', data: { id: item.id, status: item.status, reply: item.reply } }) });
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateDefect', data: { id: String(item.id), status: item.status, reply: item.reply } }) });
         },
 
-        // 進度排程處理
+        // 📌 修正：完全防呆刪除反饋項目
+        async deleteDefectItem(id) {
+          if (!confirm("確定要刪除此筆現場反饋與問題？")) return;
+          const targetId = String(id);
+          this.defects = this.defects.filter(d => String(d.id) !== targetId);
+          try {
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteDefect', id: targetId }) });
+          } catch (e) {
+            alert("刪除請求失敗，請檢查網路連線");
+          }
+        },
+
         async addScheduleItem() {
           this.isLoading = true;
-          const itemToAdd = { id: Date.now(), projectId: String(this.currentProject), ...this.newSchedule };
+          const itemToAdd = { id: String(Date.now()), projectId: String(this.currentProject), ...this.newSchedule };
           try {
             let res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addSchedule', data: itemToAdd }) });
-            let result = await res.json();
-            if (result.success) { this.schedules.push(itemToAdd); this.newSchedule.task = ''; }
-          } catch (e) { alert("進度新增失敗"); } finally { this.isLoading = false; }
+            if ((await res.json()).success) { this.schedules.push(itemToAdd); this.newSchedule.task = ''; }
+          } catch (e) { alert("失敗"); } finally { this.isLoading = false; }
         },
         async deleteScheduleItem(id) {
-          this.schedules = this.schedules.filter(s => s.id !== id);
-          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteSchedule', id: id }) });
+          this.schedules = this.schedules.filter(s => String(s.id) !== String(id));
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteSchedule', id: String(id) }) });
         },
 
-        // 收支帳目處理
         async addEntry() {
           this.isLoading = true;
-          const entryToAdd = { id: Date.now(), projectId: String(this.currentProject), ...this.newEntry };
+          const entryToAdd = { id: String(Date.now()), projectId: String(this.currentProject), ...this.newEntry };
           try {
             let res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addEntry', data: entryToAdd }) });
-            let result = await res.json();
-            if (result.success) {
+            if ((await res.json()).success) {
               this.entries.push(entryToAdd);
               if (entryToAdd.type === 'income') {
-                let p = this.projects.find(p => p.id === this.currentProject);
+                let p = this.projects.find(p => String(p.id) === String(this.currentProject));
                 if (p) p.receivedAmount += Number(entryToAdd.amount);
               }
               this.newEntry.item = ''; this.newEntry.amount = null;
             }
-          } catch (e) { alert("記帳失敗"); } finally { this.isLoading = false; }
+          } catch (e) { alert("失敗"); } finally { this.isLoading = false; }
         },
         async deleteEntry(id) {
-          let entry = this.entries.find(e => e.id === id);
+          let entry = this.entries.find(e => String(e.id) === String(id));
           if (entry && entry.type === 'income') {
-            let p = this.projects.find(p => p.id === this.currentProject);
+            let p = this.projects.find(p => String(p.id) === String(this.currentProject));
             if (p) p.receivedAmount -= Number(entry.amount);
           }
-          this.entries = this.entries.filter(i => i.id !== id);
-          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteEntry', id: id }) });
+          this.entries = this.entries.filter(i => String(i.id) !== String(id));
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteEntry', id: String(id) }) });
         },
-        
+
         async updateContractAmount() {
-          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateContractAmount', id: this.currentProject, amount: this.getActiveProject().contractAmount }) });
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateContractAmount', id: String(this.currentProject), amount: this.getActiveProject().contractAmount }) });
         },
 
         openSingleImage(url) { window.open(url, '_blank'); },
