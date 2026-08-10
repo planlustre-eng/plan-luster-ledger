@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Luster OS - PLAN LUSTRE 案場管理系統</title>
+  <title>PLAN LUSTRE 案場管理系統</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <!-- Flatpickr 日期選擇器 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -43,19 +42,18 @@
       <span class="font-medium tracking-widest text-sm text-japanese-text">PLAN LUSTRE</span>
       <span class="text-xs text-japanese-muted">|</span>
       
-      <!-- 業主專屬連結隱藏切換，管理模式可預覽 -->
+      <!-- 需求 3：精簡模式標題為四個字，防止版面擠壓亂掉 -->
       <button x-show="!isClientLink" @click="toggleMode()" class="text-xs px-3 py-1 rounded border border-japanese-border hover:border-japanese-accent text-japanese-text transition-all">
-        <span x-text="isClient ? '切換為管理模式' : '業主模式預覽'"></span>
+        <span x-text="isClient ? '管理模式' : '業主模式'"></span>
       </button>
 
-      <!-- 一鍵輸出業主連結 -->
       <button x-show="!isClientLink && !isClient" @click="copyClientLink()" class="text-xs px-3 py-1 rounded bg-japanese-accent/10 text-japanese-accent hover:bg-japanese-accent hover:text-white transition-all font-medium">
-        一鍵輸出業主連結
+        輸出連結
       </button>
-      <span x-show="isClientLink" class="text-xs px-2.5 py-0.5 rounded bg-japanese-accent/10 text-japanese-accent font-medium">業主專屬檢視</span>
+      <span x-show="isClientLink" class="text-xs px-2.5 py-0.5 rounded bg-japanese-accent/10 text-japanese-accent font-medium">業主模式</span>
     </div>
 
-    <!-- 案場選擇器 (業主模式鎖定) -->
+    <!-- 案場選擇器 -->
     <div class="text-xs text-japanese-muted flex items-center space-x-2">
       <span>案場：</span>
       <template x-if="!isClientLink">
@@ -73,7 +71,7 @@
 
   <main class="flex-1 max-w-6xl w-full mx-auto p-6 space-y-8">
     
-    <!-- 第一區：案場概要 (管理與業主差異顯示) -->
+    <!-- 管理模式數據看板 -->
     <section class="grid grid-cols-1 md:grid-cols-4 gap-6" x-show="!isClient">
       <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-2">
         <span class="text-xs text-japanese-muted block tracking-wider">CONTRACT / 合約金額</span>
@@ -96,79 +94,32 @@
       </div>
     </section>
 
-    <!-- 業主模式專屬看板 -->
+    <!-- 需求 2 & 需求 4：業主模式專屬看板 (對調標題與內文，並加入小字未收款項統計) -->
     <section class="grid grid-cols-1 md:grid-cols-2 gap-6" x-show="isClient">
-      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg">
-        <span class="text-xs text-japanese-muted block mb-2 tracking-wider">RECEIVED AMOUNT / 已繳請款總額</span>
-        <div class="text-3xl font-light text-japanese-accent" x-text="'$ ' + formatNumber(getActiveProject().receivedAmount)"></div>
-        <div class="text-xs text-japanese-muted mt-2">包含開工款、各期工程請款等紀錄</div>
+      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg flex flex-col justify-between">
+        <div>
+          <!-- 需求 4：案場名稱加大放置於上方 -->
+          <div class="text-xl font-medium text-japanese-text" x-text="getActiveProject().name"></div>
+          <!-- 需求 4：款項標題調整置於下方 -->
+          <span class="text-xs text-japanese-muted block mt-1 tracking-wider">PROJECT STATUS / 施工中案場</span>
+        </div>
+        <div class="text-xs text-japanese-success mt-4">● 正常工期進行中</div>
       </div>
-      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg flex flex-col justify-center">
-        <span class="text-xs text-japanese-muted block mb-1 tracking-wider">PROJECT STATUS / 案場狀態</span>
-        <div class="text-xl font-medium text-japanese-text" x-text="getActiveProject().name"></div>
-        <div class="text-xs text-japanese-success mt-1">● 施工進行中</div>
+
+      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-3">
+        <div>
+          <span class="text-xs text-japanese-muted block tracking-wider">RECEIVED AMOUNT / 已繳請款總額</span>
+          <div class="text-3xl font-light text-japanese-accent mt-1" x-text="'$ ' + formatNumber(getActiveProject().receivedAmount)"></div>
+        </div>
+        <!-- 需求 2：業主模式列出 未收款項 (合約金額 - 已付款項 = 未收款項) 小字設計 -->
+        <div class="pt-3 border-t border-japanese-border/60 flex justify-between items-center text-xs text-japanese-muted">
+          <span>合約總額: <strong class="text-japanese-text" x-text="'$' + formatNumber(getActiveProject().contractAmount)"></strong></span>
+          <span class="text-japanese-warn font-medium">未收尾款: <strong x-text="'$' + formatNumber(getActiveProject().contractAmount - getActiveProject().receivedAmount)"></strong></span>
+        </div>
       </div>
     </section>
 
-    <!-- 圖面與文件 (支援PDF上傳或雲端網址) -->
-    <section class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-6">
-      <div class="border-b border-japanese-border/60 pb-4">
-        <h2 class="text-sm font-medium tracking-wider text-japanese-text">DOCUMENTS & DRAWINGS / 案場圖面與檔案</h2>
-        <p class="text-xs text-japanese-muted mt-1 font-light">點擊檔案即可閱覽 PDF 施工圖或報價單</p>
-      </div>
-
-      <!-- 管理模式：新增圖面 -->
-      <form x-show="!isClient" @submit.prevent="uploadDocument()" class="space-y-3 bg-japanese-bg p-4 rounded border border-japanese-border">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <input type="text" x-model="newDoc.title" placeholder="圖面名稱 (例: 平面配置圖_v2)" required class="bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none">
-          <select x-model="newDoc.category" class="bg-japanese-paper border border-japanese-border rounded px-2 py-2 text-xs outline-none">
-            <option value="施工圖">施工圖</option>
-            <option value="3D示意圖">3D示意圖</option>
-            <option value="發包預算/選材表">發包預算/選材表</option>
-            <option value="其他文件">其他文件</option>
-          </select>
-          <!-- 雙軌上傳切換 -->
-          <div class="flex rounded border border-japanese-border overflow-hidden bg-japanese-paper">
-            <button type="button" @click="docUploadType = 'link'" :class="docUploadType === 'link' ? 'bg-japanese-text text-white' : 'text-japanese-muted'" class="flex-1 text-[11px] py-1.5 transition-all">雲端網址</button>
-            <button type="button" @click="docUploadType = 'file'" :class="docUploadType === 'file' ? 'bg-japanese-text text-white' : 'text-japanese-muted'" class="flex-1 text-[11px] py-1.5 transition-all">上傳 PDF 檔</button>
-          </div>
-        </div>
-
-        <div class="flex flex-col sm:flex-row gap-3">
-          <template x-if="docUploadType === 'file'">
-            <div class="relative flex-1">
-              <input type="file" id="docFileInput" accept="application/pdf" @change="handleDocFileSelect($event)" class="hidden">
-              <label for="docFileInput" class="w-full flex items-center justify-center bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs text-japanese-text cursor-pointer hover:border-japanese-accent truncate">
-                <span x-text="selectedDocName ? selectedDocName : '📎 選擇電腦中的 PDF 檔案 (建議小於5MB)'"></span>
-              </label>
-            </div>
-          </template>
-          <template x-if="docUploadType === 'link'">
-            <input type="url" x-model="newDoc.directUrl" placeholder="請貼上 Google Drive 分享連結 (https://...)" class="flex-1 bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none">
-          </template>
-
-          <button type="submit" :disabled="isLoading" class="bg-japanese-accent text-white text-xs px-6 py-2 rounded tracking-wider hover:opacity-90 transition-all">新增圖面</button>
-        </div>
-      </form>
-
-      <!-- 圖面列表 -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        <template x-for="doc in filteredDocuments()" :key="doc.id">
-          <div class="bg-japanese-bg border border-japanese-border rounded p-4 flex justify-between items-center hover:border-japanese-accent transition-all">
-            <div class="space-y-1 truncate pr-2">
-              <span class="text-[10px] px-2 py-0.5 rounded bg-japanese-accent/10 text-japanese-accent" x-text="doc.category"></span>
-              <div class="text-xs font-medium text-japanese-text truncate" x-text="doc.title"></div>
-            </div>
-            <div class="flex items-center space-x-2">
-              <a :href="doc.url" target="_blank" class="text-xs text-japanese-accent hover:underline font-medium">檢視檔案</a>
-              <button x-show="!isClient" @click="deleteDocument(doc.id)" class="text-japanese-muted hover:text-japanese-warn text-xs">✕</button>
-            </div>
-          </div>
-        </template>
-      </div>
-    </section>
-
-    <!-- 施工進度時間軸 -->
+    <!-- 需求 4：施工進度時間軸 (置於上方) -->
     <section class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-6">
       <div class="border-b border-japanese-border/60 pb-4">
         <h2 class="text-sm font-medium tracking-wider text-japanese-text">PROGRESS SCHEDULE / 施工進度時間軸</h2>
@@ -200,11 +151,108 @@
       </div>
     </section>
 
+    <!-- 需求 4：圖面與檔案區塊 (置於下方) -->
+    <section class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-6">
+      <div class="border-b border-japanese-border/60 pb-4">
+        <h2 class="text-sm font-medium tracking-wider text-japanese-text">DOCUMENTS & DRAWINGS / 案場圖面與檔案</h2>
+        <p class="text-xs text-japanese-muted mt-1 font-light">點擊檔案即可檢視 PDF 施工圖或設計圖說</p>
+      </div>
+
+      <form x-show="!isClient" @submit.prevent="uploadDocument()" class="space-y-3 bg-japanese-bg p-4 rounded border border-japanese-border">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <input type="text" x-model="newDoc.title" placeholder="圖面名稱 (例: 平面配置圖_v2)" required class="bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none">
+          <select x-model="newDoc.category" class="bg-japanese-paper border border-japanese-border rounded px-2 py-2 text-xs outline-none">
+            <option value="施工圖">施工圖</option>
+            <option value="3D示意圖">3D示意圖</option>
+            <option value="發包預算/選材表">發包預算/選材表</option>
+            <option value="其他文件">其他文件</option>
+          </select>
+          <div class="flex rounded border border-japanese-border overflow-hidden bg-japanese-paper">
+            <button type="button" @click="docUploadType = 'link'" :class="docUploadType === 'link' ? 'bg-japanese-text text-white' : 'text-japanese-muted'" class="flex-1 text-[11px] py-1.5 transition-all">雲端網址</button>
+            <button type="button" @click="docUploadType = 'file'" :class="docUploadType === 'file' ? 'bg-japanese-text text-white' : 'text-japanese-muted'" class="flex-1 text-[11px] py-1.5 transition-all">上傳 PDF 檔</button>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <template x-if="docUploadType === 'file'">
+            <div class="relative flex-1">
+              <input type="file" id="docFileInput" accept="application/pdf" @change="handleDocFileSelect($event)" class="hidden">
+              <label for="docFileInput" class="w-full flex items-center justify-center bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs text-japanese-text cursor-pointer hover:border-japanese-accent truncate">
+                <span x-text="selectedDocName ? selectedDocName : '📎 選擇電腦中的 PDF 檔案'"></span>
+              </label>
+            </div>
+          </template>
+          <template x-if="docUploadType === 'link'">
+            <input type="url" x-model="newDoc.directUrl" placeholder="請貼上 Google Drive 分享連結 (https://...)" class="flex-1 bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none">
+          </template>
+
+          <button type="submit" :disabled="isLoading" class="bg-japanese-accent text-white text-xs px-6 py-2 rounded tracking-wider hover:opacity-90 transition-all">新增圖面</button>
+        </div>
+      </form>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <template x-for="doc in filteredDocuments()" :key="doc.id">
+          <div class="bg-japanese-bg border border-japanese-border rounded p-4 flex justify-between items-center hover:border-japanese-accent transition-all">
+            <div class="space-y-1 truncate pr-2">
+              <span class="text-[10px] px-2 py-0.5 rounded bg-japanese-accent/10 text-japanese-accent" x-text="doc.category"></span>
+              <div class="text-xs font-medium text-japanese-text truncate" x-text="doc.title"></div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <a :href="doc.url" target="_blank" class="text-xs text-japanese-accent hover:underline font-medium">檢視</a>
+              <button x-show="!isClient" @click="deleteDocument(doc.id)" class="text-japanese-muted hover:text-japanese-warn text-xs">✕</button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <!-- 需求 1：工程追加減項目專屬區塊 (業主與管理模式均可檢視，自動統計金額) -->
+    <section class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-6">
+      <div class="flex justify-between items-end border-b border-japanese-border/60 pb-4">
+        <div>
+          <h2 class="text-sm font-medium tracking-wider text-japanese-text">VARIATIONS / 工程追加減項目</h2>
+          <p class="text-xs text-japanese-muted mt-1 font-light">統計施工過程中新增或減項之工程項目與金額變更</p>
+        </div>
+        <!-- 追加減金額小計統計 -->
+        <div class="text-right flex space-x-4 text-xs">
+          <div><span class="text-japanese-muted">追加小計：</span><span class="text-japanese-warn font-medium" x-text="'+$' + formatNumber(calculateVariationTotal('add'))"></span></div>
+          <div><span class="text-japanese-muted">追減小計：</span><span class="text-japanese-success font-medium" x-text="'-$' + formatNumber(calculateVariationTotal('reduce'))"></span></div>
+          <div><span class="text-japanese-muted">淨追加減：</span><span class="font-medium text-japanese-accent" x-text="'$' + formatNumber(calculateVariationNet())"></span></div>
+        </div>
+      </div>
+
+      <!-- 管理模式：新增追加減 -->
+      <form x-show="!isClient" @submit.prevent="addVariationItem()" class="grid grid-cols-1 sm:grid-cols-5 gap-3 bg-japanese-bg p-4 rounded border border-japanese-border">
+        <select x-model="newVariation.type" class="bg-japanese-paper border border-japanese-border rounded px-2 py-2 text-xs outline-none">
+          <option value="add">追加 (+)</option>
+          <option value="reduce">追減 (-)</option>
+        </select>
+        <input type="text" x-model="newVariation.item" placeholder="項目名稱 (例: 插座新增x2)" required class="sm:col-span-2 bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none">
+        <input type="number" x-model.number="newVariation.amount" placeholder="金額" required class="bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none">
+        <button type="submit" :disabled="isLoading" class="bg-japanese-text text-white text-xs rounded py-2 hover:bg-japanese-accent transition-all">登錄追加減</button>
+      </form>
+
+      <!-- 追加減列表 -->
+      <div class="space-y-2">
+        <template x-for="item in filteredVariations()" :key="item.id">
+          <div class="flex items-center justify-between p-3 bg-japanese-bg rounded border border-japanese-border/40 text-xs">
+            <div class="flex items-center space-x-3">
+              <span class="px-2 py-0.5 rounded text-[10px]" :class="item.type === 'add' ? 'bg-japanese-warn/20 text-japanese-warn' : 'bg-japanese-success/20 text-japanese-success'" x-text="item.type === 'add' ? '追加' : '追減'"></span>
+              <span class="font-medium text-japanese-text" x-text="item.item"></span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <span class="font-medium" :class="item.type === 'add' ? 'text-japanese-warn' : 'text-japanese-success'" x-text="(item.type === 'add' ? '+ $' : '- $') + formatNumber(item.amount)"></span>
+              <button x-show="!isClient" @click="deleteVariationItem(item.id)" class="text-japanese-muted hover:text-japanese-warn">✕</button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </section>
+
     <!-- 現場反饋與問題追蹤 -->
     <section class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-6">
       <div class="border-b border-japanese-border/60 pb-4">
         <h2 class="text-sm font-medium tracking-wider text-japanese-text">SITE FEEDBACK / 現場反饋與問題提問</h2>
-        <p class="text-xs text-japanese-muted mt-1 font-light">上傳現場照片或提出問題，我們將盡速追蹤處理</p>
       </div>
 
       <form @submit.prevent="addDefectFeedback()" class="space-y-3 bg-japanese-bg p-4 rounded border border-japanese-border">
@@ -266,7 +314,7 @@
       </div>
     </section>
 
-    <!-- 收支明細 (僅管理模式可見) -->
+    <!-- 內部收支明細 (僅管理模式可見) -->
     <section x-show="!isClient" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg h-fit space-y-4">
         <h2 class="text-sm font-medium tracking-wider text-japanese-text">NEW ENTRY / 新增收支</h2>
@@ -308,31 +356,30 @@
   </footer>
 
   <script>
-    // ⚠️ 貼上你最新的 Google Apps Script 網址
-    const API_URL = "https://script.google.com/macros/s/AKfycby4qYqNCSvRldLAk4yY9i7TrJWT1x5uuSv-b8QN5Z2sgdYEcNkYzNB6yUlbxylbsNL_5A/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwc8u7gWwDkF1W6O2C_04rX2J8G-9aD1T5XoWj0zN4Q/exec";
 
     function lusterApp() {
       return {
         currentProject: "1",
         isClient: false,
         isClientLink: false,
-        projects: [], entries: [], schedules: [], defects: [], documents: [],
+        projects: [], entries: [], schedules: [], defects: [], documents: [], variations: [],
         isLoading: false,
 
         newEntry: { type: 'expense', item: '', amount: null, date: new Date().toISOString().split('T')[0] },
         newSchedule: { task: '', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0], status: '進行中' },
+        newVariation: { type: 'add', item: '', amount: null },
         
         newDefect: { item: '', note: '', base64Photo: '', photoName: '' },
         selectedDefectPhotoName: '',
         
-        docUploadType: 'link', // 'link' 或 'file'
+        docUploadType: 'link',
         newDoc: { title: '', category: '施工圖', base64Data: '', fileName: '', directUrl: '' },
         selectedDocName: '',
 
         async fetchData() {
           this.isLoading = true;
           const urlParams = new URLSearchParams(window.location.search);
-          
           if (urlParams.get('mode') === 'client') {
             this.isClient = true;
             this.isClientLink = true;
@@ -349,6 +396,7 @@
             this.schedules = data.schedules || [];
             this.defects = data.defects || [];
             this.documents = data.documents || [];
+            this.variations = data.variations || [];
             
             if (!urlParams.get('projectId') && this.projects.length > 0) {
               this.currentProject = String(this.projects[0].id);
@@ -379,8 +427,34 @@
         filteredSchedules() { return this.schedules.filter(i => String(i.projectId) === String(this.currentProject)); },
         filteredDefects() { return this.defects.filter(i => String(i.projectId) === String(this.currentProject)); },
         filteredDocuments() { return this.documents.filter(i => String(i.projectId) === String(this.currentProject)); },
+        filteredVariations() { return this.variations.filter(i => String(i.projectId) === String(this.currentProject)); },
 
-        // PDF 與圖面上傳處理
+        // 追加減算數邏輯
+        calculateVariationTotal(type) {
+          return this.filteredVariations().filter(v => v.type === type).reduce((sum, v) => sum + Number(v.amount), 0);
+        },
+        calculateVariationNet() {
+          return this.calculateVariationTotal('add') - this.calculateVariationTotal('reduce');
+        },
+        async addVariationItem() {
+          this.isLoading = true;
+          const varToAdd = { id: Date.now(), projectId: String(this.currentProject), ...this.newVariation };
+          try {
+            let res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'addVariation', data: varToAdd }) });
+            let result = await res.json();
+            if (result.success) {
+              this.variations.push(varToAdd);
+              this.newVariation.item = '';
+              this.newVariation.amount = null;
+            }
+          } catch (e) { alert("追加減登錄失敗"); } finally { this.isLoading = false; }
+        },
+        async deleteVariationItem(id) {
+          this.variations = this.variations.filter(v => v.id !== id);
+          await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteVariation', id: id }) });
+        },
+
+        // PDF 與檔案上傳
         handleDocFileSelect(e) {
           const file = e.target.files[0];
           if (file) {
@@ -423,7 +497,7 @@
           await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteDocument', id: id }) });
         },
 
-        // 反饋系統處理
+        // 反饋處理
         handleDefectPhotoSelect(e) {
           const file = e.target.files[0];
           if (file) {
@@ -451,7 +525,7 @@
           await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateDefect', data: { id: item.id, status: item.status, reply: item.reply } }) });
         },
 
-        // 工期排程處理
+        // 進度排程處理
         async addScheduleItem() {
           this.isLoading = true;
           const itemToAdd = { id: Date.now(), projectId: String(this.currentProject), ...this.newSchedule };
