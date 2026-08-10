@@ -268,9 +268,9 @@
               <div class="flex items-center space-x-2 shrink-0">
                 <template x-if="!isClient">
                   <select x-model="item.status" @change="updateDefectStatus(item)" class="text-xs bg-japanese-paper border border-japanese-border rounded px-2 py-1 outline-none font-medium">
-                    <option value="待處理">🔴 待處理</option>
-                    <option value="處理中">🟡 處理中</option>
-                    <option value="已處理">🟢 已處理</option>
+                    <option value="待處理">待處理</option>
+                    <option value="處理中">處理中</option>
+                    <option value="已處理">已處理</option>
                   </select>
                 </template>
                 <template x-if="isClient">
