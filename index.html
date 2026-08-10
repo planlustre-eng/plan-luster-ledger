@@ -259,13 +259,15 @@
         <h2 class="text-sm font-medium tracking-wider text-japanese-text">SITE FEEDBACK / 現場反饋與問題提問</h2>
       </div>
 
+      <!-- 提問表單：管理與業主模式均可使用與上傳照片 -->
       <form @submit.prevent="addDefectFeedback()" class="space-y-3 bg-japanese-bg p-4 rounded border border-japanese-border">
         <input type="text" x-model="newDefect.item" placeholder="問題標題 (例: 主臥插座位置確認)" required class="w-full bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none">
         <textarea x-model="newDefect.note" placeholder="詳細說明內容..." class="w-full bg-japanese-paper border border-japanese-border rounded px-3 py-2 text-xs outline-none h-16"></textarea>
         <div class="flex justify-between items-center">
+          <!-- 修正 2：開放業主模式也可選取照片 -->
           <div class="relative">
             <input type="file" id="defectFileInput" accept="image/*" @change="handleDefectPhotoSelect($event)" class="hidden">
-            <label for="defectFileInput" class="inline-block bg-japanese-paper border border-japanese-border rounded px-3 py-1.5 text-xs text-japanese-muted cursor-pointer hover:border-japanese-accent">
+            <label for="defectFileInput" class="inline-block bg-japanese-paper border border-japanese-border rounded px-3 py-1.5 text-xs text-japanese-muted cursor-pointer hover:border-japanese-accent transition-all">
               <span x-text="selectedDefectPhotoName ? selectedDefectPhotoName : '📷 附上照片 (可選)'"></span>
             </label>
           </div>
@@ -273,47 +275,57 @@
         </div>
       </form>
 
+      <!-- 反饋列表 -->
       <div class="space-y-4">
         <template x-for="item in filteredDefects()" :key="item.id">
-          <div class="bg-japanese-bg border border-japanese-border/60 p-4 rounded-lg space-y-3">
-            <div class="flex justify-between items-start">
+          <div class="bg-japanese-bg border border-japanese-border/60 p-4 rounded-lg space-y-3 relative">
+            <div class="flex justify-between items-start gap-2">
               <div class="space-y-1">
                 <span class="text-xs font-medium text-japanese-text" x-text="item.item"></span>
                 <p class="text-xs text-japanese-muted font-light" x-text="item.note || '無詳細說明'"></p>
               </div>
-              <div class="flex items-center space-x-2">
+              <div class="flex items-center space-x-2 shrink-0">
                 <template x-if="!isClient">
                   <select x-model="item.status" @change="updateDefectStatus(item)" class="text-xs bg-japanese-paper border border-japanese-border rounded px-2 py-1 outline-none font-medium">
-                    <option value="待處理">🔴 待處理</option>
-                    <option value="處理中">🟡 處理中</option>
-                    <option value="已處理">🟢 已處理</option>
+                    <option value="待處理">待處理</option>
+                    <option value="處理中">處理中</option>
+                    <option value="已處理">已處理</option>
                   </select>
                 </template>
                 <template x-if="isClient">
                   <span class="text-xs px-2.5 py-1 rounded font-medium" :class="item.status === '已處理' ? 'bg-japanese-success/10 text-japanese-success' : (item.status === '處理中' ? 'bg-japanese-warn/20 text-japanese-warn' : 'bg-red-50 text-red-500')" x-text="item.status"></span>
                 </template>
+
+                <!-- 修正 1：管理模式新增刪除按鈕 -->
+                <button x-show="!isClient" @click="deleteDefectItem(item.id)" class="text-japanese-muted hover:text-japanese-warn text-xs pl-1">✕</button>
               </div>
             </div>
 
             <template x-if="item.url">
               <div class="w-24 h-24 rounded border border-japanese-border overflow-hidden bg-white">
-                <img :src="item.url" @click="openSingleImage(item.url)" class="w-full h-full object-cover cursor-pointer">
+                <img :src="item.url" @click="openSingleImage(item.url)" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-all">
               </div>
             </template>
 
+            <!-- 團隊回覆區塊 -->
             <div x-show="item.reply || !isClient" class="pt-2 border-t border-japanese-border/40 text-xs space-y-2">
               <div class="text-japanese-muted font-medium">團隊回覆：</div>
               <template x-if="!isClient">
-                <div class="flex space-x-2">
-                  <input type="text" x-model="item.reply" placeholder="輸入處置回覆..." class="flex-1 bg-japanese-paper border border-japanese-border rounded px-2 py-1 text-xs outline-none">
-                  <button @click="updateDefectStatus(item)" class="bg-japanese-text text-white px-3 py-1 rounded text-[11px]">更新</button>
+                <!-- 修正 3：防止回覆框與按鈕超出格子 -->
+                <div class="flex flex-wrap sm:flex-nowrap gap-2 w-full">
+                  <input type="text" x-model="item.reply" placeholder="輸入處置回覆..." class="flex-1 min-w-0 bg-japanese-paper border border-japanese-border rounded px-2 py-1.5 text-xs outline-none focus:border-japanese-accent">
+                  <button @click="updateDefectStatus(item)" class="bg-japanese-text text-white px-3 py-1.5 rounded text-[11px] shrink-0 hover:bg-japanese-accent transition-all">更新</button>
                 </div>
               </template>
               <template x-if="isClient && item.reply">
-                <p class="text-japanese-text bg-japanese-paper p-2 rounded border border-japanese-border/40" x-text="item.reply"></p>
+                <p class="text-japanese-text bg-japanese-paper p-2 rounded border border-japanese-border/40 font-light" x-text="item.reply"></p>
               </template>
             </div>
           </div>
+        </template>
+
+        <template x-if="filteredDefects().length === 0">
+          <div class="text-center py-6 text-xs text-japanese-muted font-light">尚無反饋紀錄</div>
         </template>
       </div>
     </section>
