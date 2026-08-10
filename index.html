@@ -3,546 +3,483 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>案場管理系統 OS</title>
+  <title>Luster OS - PLAN LUSTRE 案場管理系統</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            japanese: {
+              bg: '#FBFBFA',
+              paper: '#FFFFFF',
+              text: '#2C2A29',
+              muted: '#7E7A74',
+              border: '#E8E6E1',
+              accent: '#C4A482',
+              success: '#8FA499',
+              warn: '#D1A18C'
+            }
+          },
+          fontFamily: { sans: ['Noto Sans TC', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
   <style>
-    :root {
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --bg: #f8fafc;
-      --card-bg: #ffffff;
-      --text: #1e293b;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --danger: #ef4444;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 20px;
-      line-height: 1.5;
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .header h1 {
-      margin: 0;
-      font-size: 1.6rem;
-    }
-
-    .badge-client {
-      background: #e0f2fe;
-      color: #0369a1;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 20px;
-      border: 1px solid var(--border);
-      margin-bottom: 20px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-
-    h2 {
-      margin-top: 0;
-      margin-bottom: 16px;
-      font-size: 1.2rem;
-      color: var(--text);
-    }
-
-    .form-group {
-      margin-bottom: 12px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 4px;
-      font-weight: 600;
-      font-size: 0.88rem;
-    }
-
-    input, select, button, textarea {
-      width: 100%;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      box-sizing: border-box;
-      font-size: 0.95rem;
-    }
-
-    button {
-      background: var(--primary);
-      color: white;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: background 0.2s;
-    }
-
-    button:hover {
-      background: var(--primary-hover);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 16px;
-    }
-
-    .project-item {
-      padding: 14px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #fafafa;
-    }
-
-    .danger-btn {
-      background: var(--danger);
-      width: auto;
-      padding: 6px 12px;
-    }
-    .danger-btn:hover {
-      background: #dc2626;
-    }
-
-    /* ================= 風格 B：時間軸相簿 ================= */
-    .timeline-container {
-      position: relative;
-      padding-left: 28px;
-      margin: 10px 0;
-    }
-
-    .timeline-container::before {
-      content: '';
-      position: absolute;
-      left: 8px;
-      top: 8px;
-      bottom: 8px;
-      width: 2px;
-      background: #e2e8f0;
-    }
-
-    .timeline-group {
-      margin-bottom: 28px;
-      position: relative;
-    }
-
-    .timeline-dot {
-      position: absolute;
-      left: -28px;
-      top: 4px;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--primary);
-      border: 3px solid #ffffff;
-      box-shadow: 0 0 0 2px var(--primary);
-    }
-
-    .timeline-date {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 12px;
-    }
-
-    .timeline-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 14px;
-    }
-
-    .timeline-card {
-      position: relative;
-      border-radius: 10px;
-      overflow: hidden;
-      background: #ffffff;
-      border: 1px solid var(--border);
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .timeline-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-    }
-
-    .timeline-card img {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      display: block;
-    }
-
-    .timeline-card-info {
-      padding: 10px;
-    }
-
-    .timeline-tag {
-      display: inline-block;
-      font-size: 0.72rem;
-      background: #eff6ff;
-      color: #2563eb;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .timeline-note {
-      font-size: 0.85rem;
-      color: #475569;
-      margin: 0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* ================= Lightbox 燈箱彈窗 ================= */
-    .lightbox-modal {
-      display: none;
-      position: fixed;
-      z-index: 9999;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(15, 23, 42, 0.9);
-      backdrop-filter: blur(5px);
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
-
-    .lightbox-content {
-      max-width: 90%;
-      max-height: 75vh;
-      border-radius: 8px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      object-fit: contain;
-    }
-
-    .lightbox-caption {
-      color: #f8fafc;
-      margin-top: 14px;
-      text-align: center;
-      font-size: 0.95rem;
-      padding: 0 20px;
-    }
-
-    .lightbox-close {
-      position: absolute;
-      top: 20px;
-      right: 25px;
-      color: #fff;
-      font-size: 32px;
-      font-weight: bold;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .lightbox-btn {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(255, 255, 255, 0.15);
-      color: white;
-      border: none;
-      padding: 16px 12px;
-      font-size: 24px;
-      cursor: pointer;
-      border-radius: 6px;
-      user-select: none;
-      transition: background 0.2s;
-      width: auto;
-    }
-
-    .lightbox-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    .lightbox-prev { left: 20px; }
-    .lightbox-next { right: 20px; }
+    body { background-color: #FBFBFA; color: #2C2A29; letter-spacing: 0.05em; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #FBFBFA; }
+    ::-webkit-scrollbar-thumb { background: #E8E6E1; border-radius: 2px; }
   </style>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>🏗️ 案場管理系統</h1>
-      <div id="modeBadge"></div>
-    </div>
+<body class="min-h-screen flex flex-col font-sans" x-data="lusterApp()" x-init="fetchData()">
 
-    <!-- 僅管理者顯示：新增案場 -->
-    <div class="card" id="adminAddProjectCard">
-      <h2>新增案場</h2>
-      <form id="addProjectForm">
-        <div class="form-group">
-          <label for="projectName">案場名稱</label>
-          <input type="text" id="projectName" placeholder="例如：中山區許宅" required>
+  <!-- 頂部導覽列 -->
+  <header class="border-b border-japanese-border bg-japanese-paper/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-3">
+      <div class="w-2 h-2 rounded-full" :class="isLoading ? 'bg-japanese-warn animate-ping' : 'bg-japanese-accent'"></div>
+      <span class="font-medium tracking-widest text-sm text-japanese-text">PLAN LUSTRE</span>
+      <span class="text-xs text-japanese-muted">|</span>
+      <span class="text-xs text-japanese-muted font-light tracking-wider" x-text="isClient ? '業主專屬檢視模式 Client View' : (isLoading ? '同步中 Syncing...' : '雲端已同步 Cloud Synced')"></span>
+    </div>
+    <div class="text-xs text-japanese-muted flex items-center space-x-2">
+      <span>目前案場：</span>
+      <select class="bg-transparent border-none focus:ring-0 text-japanese-text font-medium cursor-pointer outline-none" x-model="currentProject">
+        <template x-for="proj in projects" :key="proj.id">
+          <option :value="proj.id" x-text="proj.name"></option>
+        </template>
+      </select>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-6xl w-full mx-auto p-6 space-y-8">
+    
+    <!-- 第一區：案場概要與損益看板（管理員顯示/業主隱藏敏感財務） -->
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-6" x-show="!isClient">
+      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg">
+        <span class="text-xs text-japanese-muted block mb-2 tracking-wider">CONTRACT AMOUNT / 合約金額</span>
+        <div class="text-2xl font-light text-japanese-text" x-text="'$ ' + formatNumber(getActiveProject().contractAmount)"></div>
+        <div class="text-[11px] text-japanese-muted mt-2">設計與工程總承攬額</div>
+      </div>
+
+      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg">
+        <span class="text-xs text-japanese-muted block mb-2 tracking-wider">REVENUE RECEIVED / 已收款</span>
+        <div class="text-2xl font-light text-japanese-success" x-text="'$ ' + formatNumber(getActiveProject().receivedAmount)"></div>
+        <div class="text-[11px] text-japanese-muted mt-2">
+          剩餘待收：<span class="font-medium" x-text="'$ ' + formatNumber(getActiveProject().contractAmount - getActiveProject().receivedAmount)"></span>
         </div>
-        <div class="form-group">
-          <label for="contractAmount">合約總金額 (NT$)</label>
-          <input type="number" id="contractAmount" placeholder="例如：1500000" required>
+      </div>
+
+      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg">
+        <span class="text-xs text-japanese-muted block mb-2 tracking-wider">TOTAL EXPENSES / 已發包成本</span>
+        <div class="text-2xl font-light text-japanese-text" x-text="'$ ' + formatNumber(calculateTotalExpenses())"></div>
+        <div class="text-[11px] text-japanese-muted mt-2" :class="calculateExpenseRatio() > 80 ? 'text-japanese-warn font-medium' : ''">
+          預算佔比：<span x-text="calculateExpenseRatio() + '%'"></span>
+          <span x-show="calculateExpenseRatio() > 80"> (接近預警線)</span>
         </div>
-        <button type="submit">確認新增案場</button>
-      </form>
-    </div>
+      </div>
 
-    <!-- 案場列表 -->
-    <div class="card">
-      <h2>案場列表</h2>
-      <div id="projectList" class="grid">載入中...</div>
-    </div>
+      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg" :class="calculateProfit() < 0 ? 'border-japanese-warn' : 'border-japanese-accent/30'">
+        <span class="text-xs text-japanese-accent block mb-2 tracking-wider font-medium">ESTIMATED PROFIT / 估算毛利</span>
+        <div class="text-2xl font-medium text-japanese-accent" x-text="'$ ' + formatNumber(calculateProfit())"></div>
+        <div class="text-[11px] text-japanese-muted mt-2">
+          即時毛利率：<span class="font-medium text-japanese-text" x-text="calculateProfitMargin() + '%'"></span>
+        </div>
+      </div>
+    </section>
 
-    <!-- 現場照片相簿區塊 -->
-    <div class="card">
-      <h2>📷 現場施工日誌 (現場照片)</h2>
-      <div id="photoList">載入中...</div>
-    </div>
-  </div>
+    <!-- 第二區：記帳與明細（僅管理員模式顯示） -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-8" x-show="!isClient">
+      <!-- 左側：表單 -->
+      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg h-fit space-y-6">
+        <div>
+          <h2 class="text-sm font-medium tracking-wider text-japanese-text">NEW ENTRY / 新增收支</h2>
+          <p class="text-xs text-japanese-muted mt-1 font-light">直接同步儲存至 Google 試算表</p>
+        </div>
 
-  <!-- Lightbox 放大彈窗 -->
-  <div id="lightbox" class="lightbox-modal">
-    <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
-    <button class="lightbox-btn lightbox-prev" onclick="changeLightboxImage(-1)">&#10094;</button>
-    <img id="lightbox-img" class="lightbox-content" src="" alt="放大照片">
-    <div id="lightbox-caption" class="lightbox-caption"></div>
-    <button class="lightbox-btn lightbox-next" onclick="changeLightboxImage(1)">&#10095;</button>
-  </div>
-
-  <script>
-    // ⚠️ 請替換為該公司的 GAS API 網址
-    const API_URL = "https://script.google.com/macros/s/YOUR_GAS_DEPLOYMENT_ID/exec";
-
-    // 取得 URL 參數判斷是否為業主檢視模式 (mode=client)
-    const urlParams = new URLSearchParams(window.location.search);
-    const isClient = urlParams.get('mode') === 'client';
-    const targetProjectId = urlParams.get('projectId');
-
-    let currentPhotoList = []; // 全域全相片陣列供 Lightbox 使用
-    let currentPhotoIndex = 0;
-
-    // 初始化 UI 狀態
-    if (isClient) {
-      document.getElementById('modeBadge').innerHTML = '<span class="badge-client">業主專屬檢視模式</span>';
-      document.getElementById('adminAddProjectCard').style.display = 'none';
-    }
-
-    // 載入資料
-    async function loadData() {
-      try {
-        const fetchUrl = isClient ? `${API_URL}?action=getInitialData&mode=client` : `${API_URL}?action=getInitialData`;
-        const res = await fetch(fetchUrl);
-        const data = await res.json();
-
-        let projects = data.projects || [];
-        let photos = data.photos || [];
-
-        // 若帶有 projectId，過濾對應的照片
-        if (targetProjectId) {
-          projects = projects.filter(p => p.id === targetProjectId);
-          photos = photos.filter(p => p.projectId === targetProjectId);
-        }
-
-        renderProjects(projects);
-        renderPhotos(photos);
-      } catch (err) {
-        alert("資料載入失敗，請檢查 API 網址或網路連線");
-      }
-    }
-
-    // 渲染案場列表
-    function renderProjects(projects) {
-      const container = document.getElementById('projectList');
-      if (projects.length === 0) {
-        container.innerHTML = '<p style="color:var(--text-muted)">目前尚無案場資料</p>';
-        return;
-      }
-      container.innerHTML = projects.map(p => `
-        <div class="project-item">
+        <form @submit.prevent="addEntry()" class="space-y-4">
           <div>
-            <strong>${p.name}</strong><br>
-            ${isClient ? '' : `<small style="color:var(--text-muted)">合約金額：$${Number(p.contractAmount).toLocaleString()} / 已收：$${Number(p.receivedAmount).toLocaleString()}</small>`}
+            <label class="block text-[11px] text-japanese-muted tracking-wider mb-1.5">TYPE / 帳目類型</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" @click="newEntry.type = 'expense'" 
+                      :class="newEntry.type === 'expense' ? 'bg-japanese-text text-white' : 'bg-transparent border border-japanese-border text-japanese-muted'"
+                      class="py-2 text-xs rounded transition-all focus:outline-none">
+                支出 (工班/材料)
+              </button>
+              <button type="button" @click="newEntry.type = 'income'" 
+                      :class="newEntry.type === 'income' ? 'bg-japanese-accent text-white' : 'bg-transparent border border-japanese-border text-japanese-muted'"
+                      class="py-2 text-xs rounded transition-all focus:outline-none">
+                收入 (業主請款)
+              </button>
+            </div>
           </div>
-          ${isClient ? '' : `<button class="danger-btn" onclick="deleteProject('${p.id}')">刪除</button>`}
+
+          <div>
+            <label class="block text-[11px] text-japanese-muted tracking-wider mb-1">ITEM / 品項與說明</label>
+            <input type="text" x-model="newEntry.item" placeholder="例如：木作一期、進口塗料" required
+                   class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-2 text-xs focus:ring-1 focus:ring-japanese-accent focus:border-japanese-accent outline-none text-japanese-text">
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-japanese-muted tracking-wider mb-1">AMOUNT / 金額 (NTD)</label>
+            <input type="number" x-model.number="newEntry.amount" placeholder="NT$" required min="1"
+                   class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-2 text-xs focus:ring-1 focus:ring-japanese-accent focus:border-japanese-accent outline-none text-japanese-text">
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[11px] text-japanese-muted tracking-wider mb-1">CATEGORY / 分類</label>
+              <select x-model="newEntry.category"
+                      class="w-full bg-japanese-bg border border-japanese-border rounded px-2 py-2 text-xs focus:ring-1 focus:ring-japanese-accent focus:border-japanese-accent outline-none text-japanese-text">
+                <option value="拆除工程">拆除工程</option>
+                <option value="泥作工程">泥作工程</option>
+                <option value="水電工程">水電工程</option>
+                <option value="木作工程">木作工程</option>
+                <option value="油漆工程">油漆工程</option>
+                <option value="系統櫃體">系統櫃體</option>
+                <option value="軟裝家具">軟裝家具</option>
+                <option value="設計/監工費">設計/監工費</option>
+                <option value="其他">其他</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] text-japanese-muted tracking-wider mb-1">DATE / 日期</label>
+              <input type="date" x-model="newEntry.date" required
+                     class="w-full bg-japanese-bg border border-japanese-border rounded px-2 py-1.5 text-xs focus:ring-1 focus:ring-japanese-accent focus:border-japanese-accent outline-none text-japanese-text">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-japanese-muted tracking-wider mb-1">PARTNER / 經手人或工班備註</label>
+            <input type="text" x-model="newEntry.partner" placeholder="例如：阿昌師、XX石材"
+                   class="w-full bg-japanese-bg border border-japanese-border rounded px-3 py-2 text-xs focus:ring-1 focus:ring-japanese-accent focus:border-japanese-accent outline-none text-japanese-text">
+          </div>
+
+          <button type="submit" :disabled="isLoading"
+                  class="w-full bg-japanese-text hover:bg-japanese-accent disabled:bg-japanese-muted text-white py-2.5 rounded text-xs tracking-widest font-medium transition-all">
+            <span x-text="isLoading ? '儲存中...' : '同步登記帳目 ENTER'"></span>
+          </button>
+        </form>
+      </div>
+
+      <!-- 右側：明細 -->
+      <div class="bg-japanese-paper border border-japanese-border p-6 rounded-lg lg:col-span-2 flex flex-col h-[520px]">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h2 class="text-sm font-medium tracking-wider text-japanese-text">LEDGER DETAIL / 帳目明細</h2>
+            <p class="text-xs text-japanese-muted mt-1 font-light">即時拉取 Google Sheets 工作表紀錄</p>
+          </div>
+          <span class="text-xs text-japanese-accent font-medium" x-text="'共 ' + filteredEntries().length + ' 筆記錄'"></span>
         </div>
-      `).join('');
-    }
 
-    // 渲染風格 B：時間軸施工日誌相簿
-    function renderPhotos(photos) {
-      const container = document.getElementById('photoList');
-      if (!photos || photos.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:30px;">尚無現場照片更新</p>';
-        return;
-      }
-
-      // 1. 依日期降冪排序（最新的照片在最上面）
-      const sortedPhotos = [...photos].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-      currentPhotoList = sortedPhotos;
-
-      // 2. 依日期 Grouping
-      const grouped = {};
-      sortedPhotos.forEach(p => {
-        const dateKey = p.date ? new Date(p.date).toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '未指定日期';
-        if (!grouped[dateKey]) grouped[dateKey] = [];
-        grouped[dateKey].push(p);
-      });
-
-      // 3. 繪製時間軸 HTML
-      let html = '<div class="timeline-container">';
-      
-      Object.keys(grouped).forEach(date => {
-        html += `
-          <div class="timeline-group">
-            <div class="timeline-dot"></div>
-            <div class="timeline-date">${date}</div>
-            <div class="timeline-grid">
-        `;
-        
-        grouped[date].forEach(p => {
-          const globalIndex = currentPhotoList.findIndex(item => item.id === p.id);
-          html += `
-            <div class="timeline-card" onclick="openLightbox(${globalIndex})">
-              <img src="${p.url}" alt="${p.note || '現場照片'}" loading="lazy">
-              <div class="timeline-card-info">
-                <span class="timeline-tag">${p.category || '現場紀錄'}</span>
-                <p class="timeline-note">${p.note || '無備註'}</p>
+        <div class="flex-1 overflow-y-auto space-y-3 pr-2">
+          <template x-for="item in filteredEntries()" :key="item.id">
+            <div class="flex items-center justify-between p-3.5 bg-japanese-bg rounded border border-japanese-border/40 hover:border-japanese-accent/30 transition-all">
+              <div class="flex items-center space-x-4">
+                <div class="w-1.5 h-8 rounded-full" :class="item.type === 'income' ? 'bg-japanese-accent' : 'bg-japanese-muted'"></div>
+                <div>
+                  <div class="text-xs font-medium text-japanese-text" x-text="item.item"></div>
+                  <div class="flex items-center space-x-2 mt-1 text-[10px] text-japanese-muted">
+                    <span x-text="formatDate(item.date)"></span>
+                    <span>•</span>
+                    <span class="bg-japanese-border/50 px-1.5 py-0.5 rounded text-[9px]" x-text="item.category"></span>
+                    <span x-show="item.partner" x-text="'• ' + item.partner"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center space-x-4">
+                <span class="text-xs font-medium" :class="item.type === 'income' ? 'text-japanese-accent' : 'text-japanese-text'"
+                      x-text="(item.type === 'income' ? '+ ' : '- ') + '$' + formatNumber(item.amount)"></span>
+                <button @click="deleteEntry(item.id)" :disabled="isLoading" class="text-japanese-muted hover:text-japanese-warn text-xs p-1">
+                  ✕
+                </button>
               </div>
             </div>
-          `;
-        });
+          </template>
+        </div>
+      </div>
+    </section>
 
-        html += `
+    <!-- 第三區：風格 B 時間軸施工日誌相簿（業主與管理員皆可看） -->
+    <section class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-6">
+      <div class="flex justify-between items-center border-b border-japanese-border/60 pb-4">
+        <div>
+          <h2 class="text-sm font-medium tracking-wider text-japanese-text">SITE LOG / 現場施工日誌</h2>
+          <p class="text-xs text-japanese-muted mt-1 font-light">時間軸動態紀錄，點擊照片即可放大閱覽</p>
+        </div>
+        <span class="text-xs text-japanese-accent font-medium" x-text="'共 ' + filteredPhotos().length + ' 張照片'"></span>
+      </div>
+
+      <!-- 無照片時提示 -->
+      <template x-if="filteredPhotos().length === 0">
+        <div class="py-12 text-center text-xs text-japanese-muted tracking-widest font-light">
+          目前尚無現場照片更新
+        </div>
+      </template>
+
+      <!-- 風格 B：日系時間軸照片串 -->
+      <div x-show="filteredPhotos().length > 0" class="relative pl-6 space-y-8 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-[1px] before:bg-japanese-border">
+        <template x-for="(group, dateKey) in groupedPhotos()" :key="dateKey">
+          <div class="relative">
+            <!-- 時間軸圓點 -->
+            <div class="absolute -left-[23px] top-1.5 w-2.5 h-2.5 rounded-full bg-japanese-accent border-2 border-white shadow-sm"></div>
+            <!-- 日期 -->
+            <div class="text-xs font-medium text-japanese-text mb-3 tracking-wider" x-text="dateKey"></div>
+            <!-- 相片 Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <template x-for="photo in group" :key="photo.id">
+                <div @click="openLightboxByPhoto(photo)" class="group relative bg-japanese-bg border border-japanese-border rounded overflow-hidden cursor-pointer hover:border-japanese-accent/50 transition-all duration-300 shadow-sm">
+                  <div class="aspect-video w-full overflow-hidden bg-japanese-border/20">
+                    <img :src="photo.url" :alt="photo.note || '現場照片'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+                  </div>
+                  <div class="p-2.5 bg-japanese-paper">
+                    <span class="inline-block text-[9px] bg-japanese-bg text-japanese-accent px-1.5 py-0.5 rounded border border-japanese-border/60 mb-1" x-text="photo.category || '現場紀錄'"></span>
+                    <p class="text-[11px] text-japanese-text truncate font-light" x-text="photo.note || '無備註'"></p>
+                  </div>
+                </div>
+              </template>
             </div>
           </div>
-        `;
-      });
+        </template>
+      </div>
+    </section>
 
-      html += '</div>';
-      container.innerHTML = html;
-    }
+  </main>
 
-    // ================= Lightbox 燈箱大圖邏輯 =================
-    function openLightbox(index) {
-      if (index < 0 || index >= currentPhotoList.length) return;
-      currentPhotoIndex = index;
-      
-      const photo = currentPhotoList[currentPhotoIndex];
-      const modal = document.getElementById('lightbox');
-      const img = document.getElementById('lightbox-img');
-      const caption = document.getElementById('lightbox-caption');
+  <!-- Lightbox 大圖彈窗 -->
+  <div x-show="lightbox.open" 
+       x-transition:enter="transition ease-out duration-200"
+       x-transition:enter-start="opacity-0"
+       x-transition:enter-end="opacity-100"
+       x-transition:leave="transition ease-in duration-150"
+       x-transition:leave-start="opacity-100"
+       x-transition:leave-end="opacity-0"
+       @keydown.window.escape="closeLightbox()"
+       @keydown.window.left="prevPhoto()"
+       @keydown.window.right="nextPhoto()"
+       class="fixed inset-0 z-[100] bg-japanese-text/90 backdrop-blur-md flex flex-col justify-center items-center p-4 select-none"
+       style="display: none;">
+    
+    <button @click="closeLightbox()" class="absolute top-6 right-6 text-white/70 hover:text-white text-2xl p-2 transition-all">✕</button>
+    <button @click="prevPhoto()" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white text-3xl p-3 bg-black/20 hover:bg-black/40 rounded-full transition-all">‹</button>
 
-      img.src = photo.url;
-      caption.innerHTML = `<strong>[${photo.category || '現場紀錄'}]</strong> ${photo.note || ''} <small style="opacity:0.7;">(${photo.date ? new Date(photo.date).toLocaleDateString() : ''})</small>`;
-      
-      modal.style.display = 'flex';
-    }
+    <div class="max-w-4xl max-h-[75vh] flex justify-center items-center">
+      <img :src="currentLightboxPhoto().url" class="max-w-full max-h-[75vh] object-contain rounded shadow-2xl">
+    </div>
 
-    function closeLightbox() {
-      document.getElementById('lightbox').style.display = 'none';
-    }
+    <div class="mt-4 text-center text-white/90 space-y-1">
+      <div class="text-xs tracking-widest text-japanese-accent font-medium" x-text="currentLightboxPhoto().category || '現場紀錄'"></div>
+      <div class="text-sm font-light tracking-wide" x-text="currentLightboxPhoto().note || '無備註'"></div>
+      <div class="text-[10px] text-white/50 tracking-wider" x-text="formatDate(currentLightboxPhoto().date)"></div>
+    </div>
 
-    function changeLightboxImage(direction) {
-      currentPhotoIndex += direction;
-      if (currentPhotoIndex < 0) currentPhotoIndex = currentPhotoList.length - 1;
-      if (currentPhotoIndex >= currentPhotoList.length) currentPhotoIndex = 0;
-      openLightbox(currentPhotoIndex);
-    }
+    <button @click="nextPhoto()" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white text-3xl p-3 bg-black/20 hover:bg-black/40 rounded-full transition-all">›</button>
+  </div>
 
-    // 鍵盤控制：Esc 鍵關閉，左右方向鍵切換照片
-    document.addEventListener('keydown', (e) => {
-      const modal = document.getElementById('lightbox');
-      if (modal && modal.style.display === 'flex') {
-        if (e.key === 'Escape') closeLightbox();
-        if (e.key === 'ArrowLeft') changeLightboxImage(-1);
-        if (e.key === 'ArrowRight') changeLightboxImage(1);
-      }
-    });
+  <footer class="border-t border-japanese-border py-6 text-center text-[10px] text-japanese-muted tracking-widest mt-auto">
+    © 2026 PLAN LUSTRE. DESIGNED FOR INNER PEACE AND FINANCIAL CLARITY.
+  </footer>
 
-    // 新增案場表單事件
-    if (!isClient) {
-      document.getElementById('addProjectForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const name = document.getElementById('projectName').value.trim();
-        const contractAmount = Number(document.getElementById('contractAmount').value);
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycby4qYqNCSvRldLAk4yY9i7TrJWT1x5uuSv-b8QN5Z2sgdYEcNkYzNB6yUlbxylbsNL_5A/exec";
 
-        if (!name) return alert('請輸入案場名稱');
+    function lusterApp() {
+      return {
+        currentProject: 1,
+        projects: [{ id: 1, name: '載入中...', contractAmount: 0, receivedAmount: 0 }],
+        entries: [],
+        photos: [],
+        isLoading: false,
+        isClient: false,
+        newEntry: { type: 'expense', item: '', amount: null, category: '木作工程', date: new Date().toISOString().split('T')[0], partner: '' },
+        
+        // Lightbox 狀態
+        lightbox: {
+          open: false,
+          currentIndex: 0
+        },
 
-        const payload = {
-          action: 'addProject',
-          data: {
-            id: Date.now().toString(),
-            name: name,
-            contractAmount: contractAmount,
-            receivedAmount: 0
+        async fetchData() {
+          this.isLoading = true;
+          // 檢查網址參數 ?mode=client
+          const urlParams = new URLSearchParams(window.location.search);
+          this.isClient = urlParams.get('mode') === 'client';
+          const targetProjId = urlParams.get('projectId');
+
+          try {
+            const endpoint = this.isClient ? `${API_URL}?action=getInitialData&mode=client` : `${API_URL}?action=getInitialData`;
+            let res = await fetch(endpoint);
+            let data = await res.json();
+            
+            this.projects = data.projects || [];
+            this.entries = data.entries || [];
+            this.photos = data.photos || [];
+
+            if (targetProjId) {
+              this.currentProject = targetProjId;
+            } else if (this.projects.length > 0) {
+              this.currentProject = this.projects[0].id;
+            }
+          } catch (e) {
+            console.error("資料載入失敗，請確認 API_URL:", e);
+          } finally {
+            this.isLoading = false;
           }
-        };
+        },
 
-        try {
-          const res = await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
+        getActiveProject() {
+          return this.projects.find(p => p.id == this.currentProject) || { contractAmount: 0, receivedAmount: 0 };
+        },
+
+        filteredEntries() {
+          return this.entries
+            .filter(item => item.projectId == this.currentProject)
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
+        },
+
+        filteredPhotos() {
+          return this.photos
+            .filter(item => item.projectId == this.currentProject)
+            .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+        },
+
+        groupedPhotos() {
+          const sorted = this.filteredPhotos();
+          const groups = {};
+          sorted.forEach(p => {
+            const dateStr = p.date ? this.formatDate(p.date) : '未指定日期';
+            if (!groups[dateStr]) groups[dateStr] = [];
+            groups[dateStr].push(p);
           });
-          const result = await res.json();
-          if (result.success) {
-            alert('案場新增成功！');
-            document.getElementById('addProjectForm').reset();
-            loadData();
-          } else {
-            alert('新增失敗');
+          return groups;
+        },
+
+        // Lightbox 邏輯
+        openLightboxByPhoto(photo) {
+          const list = this.filteredPhotos();
+          const index = list.findIndex(p => p.id === photo.id);
+          if (index !== -1) {
+            this.lightbox.currentIndex = index;
+            this.lightbox.open = true;
           }
-        } catch (err) {
-          alert('發送失敗：' + err.message);
+        },
+
+        closeLightbox() {
+          this.lightbox.open = false;
+        },
+
+        currentLightboxPhoto() {
+          const list = this.filteredPhotos();
+          return list[this.lightbox.currentIndex] || { url: '', note: '', category: '', date: '' };
+        },
+
+        prevPhoto() {
+          const list = this.filteredPhotos();
+          if (list.length === 0) return;
+          this.lightbox.currentIndex = (this.lightbox.currentIndex - 1 + list.length) % list.length;
+        },
+
+        nextPhoto() {
+          const list = this.filteredPhotos();
+          if (list.length === 0) return;
+          this.lightbox.currentIndex = (this.lightbox.currentIndex + 1) % list.length;
+        },
+
+        calculateTotalExpenses() {
+          return this.entries
+            .filter(item => item.projectId == this.currentProject && item.type === 'expense')
+            .reduce((sum, item) => sum + Number(item.amount), 0);
+        },
+
+        calculateExpenseRatio() {
+          const proj = this.getActiveProject();
+          if (!proj.contractAmount) return 0;
+          return Math.round((this.calculateTotalExpenses() / proj.contractAmount) * 100);
+        },
+
+        calculateProfit() {
+          const proj = this.getActiveProject();
+          return proj.contractAmount - this.calculateTotalExpenses();
+        },
+
+        calculateProfitMargin() {
+          const proj = this.getActiveProject();
+          if (!proj.contractAmount) return 0;
+          return Math.round((this.calculateProfit() / proj.contractAmount) * 100);
+        },
+
+        async addEntry() {
+          this.isLoading = true;
+          const tempId = Date.now();
+          const entryToAdd = {
+            id: tempId,
+            projectId: Number(this.currentProject),
+            ...this.newEntry
+          };
+
+          try {
+            let res = await fetch(API_URL, {
+              method: 'POST',
+              body: JSON.stringify({ action: 'addEntry', data: entryToAdd })
+            });
+            let result = await res.json();
+            if (result.success) {
+              this.entries.push(entryToAdd);
+              if (entryToAdd.type === 'income') {
+                const proj = this.getActiveProject();
+                proj.receivedAmount = Number(proj.receivedAmount) + Number(entryToAdd.amount);
+              }
+              this.newEntry.item = '';
+              this.newEntry.amount = null;
+              this.newEntry.partner = '';
+            }
+          } catch (e) {
+            alert("新增失敗，請確認連線狀態");
+          } finally {
+            this.isLoading = false;
+          }
+        },
+
+        async deleteEntry(id) {
+          if (!confirm("確定要刪除此筆收支紀錄嗎？（將同步從 Google Sheets 刪除）")) return;
+          this.isLoading = true;
+          try {
+            let res = await fetch(API_URL, {
+              method: 'POST',
+              body: JSON.stringify({ action: 'deleteEntry', id: id })
+            });
+            let result = await res.json();
+            if (result.success) {
+              const index = this.entries.findIndex(item => item.id === id);
+              if (index !== -1) {
+                const entry = this.entries[index];
+                if (entry.type === 'income') {
+                  const proj = this.getActiveProject();
+                  proj.receivedAmount = Math.max(0, Number(proj.receivedAmount) - Number(entry.amount));
+                }
+                this.entries.splice(index, 1);
+              }
+            }
+          } catch (e) {
+            alert("刪除失敗");
+          } finally {
+            this.isLoading = false;
+          }
+        },
+
+        formatNumber(num) { return (Number(num) || 0).toLocaleString(); },
+        formatDate(dateStr) {
+          if (!dateStr) return "";
+          const d = new Date(dateStr);
+          return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         }
-      });
+      };
     }
-
-    // 刪除案場
-    async function deleteProject(id) {
-      if (!confirm('確定要刪除此案場嗎？')) return;
-
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'deleteProject', id: id })
-        });
-        const result = await res.json();
-        if (result.success) {
-          loadData();
-        } else {
-          alert('刪除失敗');
-        }
-      } catch (err) {
-        alert('網路錯誤：' + err.message);
-      }
-    }
-
-    // 初始化載入
-    loadData();
   </script>
 </body>
 </html>
