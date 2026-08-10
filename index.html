@@ -206,7 +206,7 @@
       </div>
     </section>
 
-<!-- 工程追加減項目專屬區塊 (僅列出項目與金額，不進行總額計算) -->
+<!-- 工程追加減項目專屬區塊 (條列明細 + 底部虛線小計) -->
     <section class="bg-japanese-paper border border-japanese-border p-6 rounded-lg space-y-6">
       <div class="border-b border-japanese-border/60 pb-4">
         <h2 class="text-sm font-medium tracking-wider text-japanese-text">VARIATIONS / 工程追加減項目</h2>
@@ -224,7 +224,7 @@
         <button type="submit" :disabled="isLoading" class="bg-japanese-text text-white text-xs rounded py-2 hover:bg-japanese-accent transition-all">登錄追加減</button>
       </form>
 
-      <!-- 追加減明細列表 (純條列) -->
+      <!-- 追加減明細列表 -->
       <div class="space-y-2">
         <template x-for="item in filteredVariations()" :key="item.id">
           <div class="flex items-center justify-between p-3 bg-japanese-bg rounded border border-japanese-border/40 text-xs">
@@ -238,8 +238,17 @@
             </div>
           </div>
         </template>
+
         <template x-if="filteredVariations().length === 0">
           <div class="text-center py-4 text-xs text-japanese-muted font-light">尚無追加減項目</div>
+        </template>
+
+        <!-- 虛線與微型小計區塊 -->
+        <template x-if="filteredVariations().length > 0">
+          <div class="pt-3 mt-3 border-t border-dashed border-japanese-border/80 flex justify-end items-center space-x-2 text-[11px]">
+            <span class="text-japanese-muted">淨追加減小計：</span>
+            <span class="font-medium text-japanese-accent" x-text="(calculateVariationNet() >= 0 ? '+ $' : '- $') + formatNumber(Math.abs(calculateVariationNet()))"></span>
+          </div>
         </template>
       </div>
     </section>
