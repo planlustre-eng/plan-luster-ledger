@@ -3,46 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PLAN LUSTRE 案場管理系統</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh-tw.js"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            japanese: { bg: '#F9F8F6', paper: 'rgba(255, 255, 255, 0.75)', text: '#23211E', muted: '#8C877D', border: '#EFECE6', borderDark: '#E2DEC5', accent: '#B08E6B', success: '#7A9A8B', warn: '#C88A75' }
-          },
-          fontFamily: { sans: ['Noto Sans TC', 'sans-serif'] },
-          borderRadius: {
-            'xl': '6px',
-            '2xl': '8px',
-            'lg': '5px'
-          },
-          boxShadow: {
-            'soft': '0 4px 20px -2px rgba(44, 42, 41, 0.03), 0 2px 6px -1px rgba(44, 42, 41, 0.02)',
-            'hover': '0 10px 25px -5px rgba(44, 42, 41, 0.06)'
-          }
-        }
-      }
-    }
-  </script>
+  <title>Plan Lustre｜我的案場</title>
+  <link rel="stylesheet" href="./app.css">
+  <script defer src="./alpine.js"></script>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#F9F8F6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="./icon-192.png">
   <style>
-    body { background-color: #F9F8F6; color: #23211E; letter-spacing: 0.06em; }
+    [x-cloak] {display:none!important} html {scroll-behavior:smooth;scroll-padding-top:100px;overflow-x:clip} section {scroll-margin-top:100px} body { background-color: #F9F8F6; color: #23211E; letter-spacing: 0.06em; }
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: #F9F8F6; }
     ::-webkit-scrollbar-thumb { background: #EFECE6; border-radius: 2px; }
     .flatpickr-input { background-color: #FFFFFF !important; border-color: #EFECE6 !important; color: #23211E !important; font-size: 0.75rem !important; }
     .glass-card { background-color: rgba(255, 255, 255, 0.75); backdrop-filter: blur(8px); }
+    main {display:flex;flex-direction:column;gap:32px} main>section {margin:0!important;min-width:0} html,body {max-width:100%;overscroll-behavior-x:none} body {overflow-x:clip} .client-nav {position:fixed;inset:auto 0 0;z-index:60;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));background:rgba(249,248,246,.97);border-top:1px solid #e5e0d7;padding:8px 8px calc(8px + env(safe-area-inset-bottom));backdrop-filter:blur(16px)} .client-nav a {display:flex;align-items:center;flex-direction:column;gap:5px;color:#8c877d;text-decoration:none;font-size:11px;letter-spacing:0;min-height:46px;justify-content:center} .client-nav a[aria-current="location"]{color:#23211e;background:#eae5dc;border-radius:6px}.client-nav svg {width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5}.client-sync{font-size:11px;color:#8c877d;display:flex;justify-content:space-between;gap:12px;align-items:center}.client-sync button {padding:8px 12px;border:1px solid #e2ded5;border-radius:5px;flex-shrink:0}.progress-track{height:4px;background:#efebe5;border-radius:2px;overflow:hidden;margin-top:14px}.progress-track span{display:block;height:100%;background:#9c8a73;transition:width .4s}.status-caption{font-size:12px;line-height:1.8;margin-top:8px;color:#8c877d}.app-help{font-size:12px;line-height:1.9;border-top:1px solid #e2ded5;padding-top:18px}.app-help summary{cursor:pointer;color:#6d655a}.client-main{padding-bottom:110px!important}.client-main>section:first-of-type{margin-top:0!important}@media(max-width:640px){main{padding:20px 18px!important;gap:28px}.client-main{padding-bottom:115px!important}#overview .glass-card{padding:22px}header{padding:12px 18px!important} .client-nav a{font-size:10px} section h2{letter-spacing:.08em!important;line-height:1.8}section>div{max-width:100%} .glass-card{overflow-wrap:anywhere} .client-sync{align-items:flex-start}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
   </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans antialiased selection:bg-japanese-accent/20" x-data="lusterApp()" x-init="fetchData()">
+<body class="min-h-screen flex flex-col font-sans antialiased selection:bg-japanese-accent/20" x-cloak x-data="lusterApp()" x-init="fetchData()">
 
   <!-- 頂部導覽列 (已修正手機端對齊與間距) -->
   <header class="border-b border-japanese-border/80 bg-japanese-bg/80 backdrop-blur-md sticky top-0 z-50 px-4 sm:px-8 py-3.5 flex flex-wrap sm:flex-nowrap justify-between items-center gap-3 transition-all">
@@ -79,15 +57,16 @@
     </div>
   </header>
 
-  <main class="flex-1 max-w-5xl w-full mx-auto px-6 py-10 space-y-12">
+  <main :class="isClient ? 'client-main' : ''" class="flex-1 max-w-5xl w-full mx-auto px-6 py-10 space-y-12">
     
+    <div class="client-sync" x-show="isClient" role="status"><span x-text="syncMessage"></span><button @click="fetchData()" :disabled="isLoading" x-text="isLoading ? '更新中…' : '重新整理'"></button></div>
     <!-- 管理模式數據看板 (新增毛利 %) -->
     <section class="grid grid-cols-1 md:grid-cols-4 gap-4" x-show="!isClient">
       <div class="glass-card p-5 rounded-xl shadow-soft space-y-1 border border-japanese-border/40">
         <span class="text-[10px] text-japanese-muted tracking-widest uppercase block">Contract / 合約金額</span>
         <div class="flex items-center space-x-1">
           <span class="text-lg font-light text-japanese-muted">$</span>
-          <input type="number" x-model.number="getActiveProject().contractAmount" @change="updateContractAmount()" class="w-full text-xl font-light text-japanese-text bg-transparent border-b border-transparent hover:border-japanese-border focus:border-japanese-accent outline-none transition-all">
+          <input inputmode="decimal" type="number" x-model.number="getActiveProject().contractAmount" @change="updateContractAmount()" class="w-full text-xl font-light text-japanese-text bg-transparent border-b border-transparent hover:border-japanese-border focus:border-japanese-accent outline-none transition-all">
         </div>
       </div>
       <div class="glass-card p-5 rounded-xl shadow-soft space-y-1 border border-japanese-border/40">
@@ -104,8 +83,9 @@
       </div>
     </section>
 
+    <section x-show="!isClient && getActiveProject().clientStatus !== undefined" class="glass-card p-4 rounded-xl"><label class="text-xs">業主頁面工程狀態 <select x-model="getActiveProject().clientStatus" @change="saveClientStatus()" class="ml-3 p-2 border rounded"><option value="ongoing">工程進行中</option><option value="completed">完工 !!</option></select></label></section>
     <!-- 業主模式專屬看板 -->
-    <section class="grid grid-cols-1 md:grid-cols-2 gap-6" x-show="isClient">
+    <section id="overview" class="grid grid-cols-1 md:grid-cols-2 gap-6" x-show="isClient">
       <div class="glass-card p-8 rounded-2xl shadow-soft border border-japanese-border/40 flex flex-col justify-between">
         <div>
           <div class="text-2xl font-light tracking-wide text-japanese-text" x-text="getActiveProject().name"></div>
@@ -113,8 +93,11 @@
         </div>
         <div class="text-xs text-japanese-success flex items-center space-x-2 mt-6">
           <span class="w-1.5 h-1.5 rounded-full bg-japanese-success"></span>
-          <span>工程正常進行中</span>
+          <span x-text="projectStatusText()"></span>
         </div>
+        <div class="status-caption" x-text="currentScheduleText()"></div>
+        <div class="progress-track" role="progressbar" :aria-valuenow="scheduleProgress()" aria-valuemin="0" aria-valuemax="100" aria-label="已完成工期比例"><span :style="'width:'+scheduleProgress()+'%'"></span></div>
+        <p class="status-caption" x-text="progressCaption()"></p>
       </div>
 
       <div class="glass-card p-8 rounded-2xl shadow-soft border border-japanese-border/40 space-y-4">
@@ -129,41 +112,10 @@
       </div>
     </section>
 
-    <!-- 待確認/待辦事項 (雙模式區隔) -->
-    <section class="space-y-6">
-      <div class="flex justify-between items-end pb-2 border-b border-japanese-border">
-        <h2 class="text-xs font-medium tracking-[0.2em] text-japanese-text uppercase">Pending Tasks / 待確認與待辦事項</h2>
-      </div>
 
-      <!-- 管理模式：新增事項 -->
-      <form x-show="!isClient" @submit.prevent="addTodoItem()" class="grid grid-cols-1 sm:grid-cols-5 gap-3 glass-card p-4 rounded-xl shadow-soft border border-japanese-border/40">
-        <input type="text" x-model="newTodo.task" placeholder="事項內容 (例: 確認燈具選樣)" required class="sm:col-span-2 bg-japanese-bg border border-japanese-border/60 rounded-lg px-3 py-2 text-xs outline-none focus:border-japanese-accent transition-all">
-        <input type="text" x-model="newTodo.dueDate" placeholder="預計完成時間" class="flatpickr-custom rounded-lg px-3 py-2 text-xs">
-        <button type="submit" :disabled="isLoading" class="sm:col-span-2 bg-japanese-text text-white text-xs rounded-lg py-2 hover:bg-japanese-accent transition-all font-light">新增事項</button>
-      </form>
-
-      <!-- 事項列表 (業主可勾選標記) -->
-      <div class="space-y-2">
-        <template x-for="todo in filteredTodos()" :key="todo.id">
-          <div class="flex items-center justify-between p-3.5 glass-card rounded-xl border border-japanese-border/30 shadow-soft text-xs transition-all">
-            <div class="flex items-center space-x-3">
-              <input type="checkbox" :checked="todo.completed" @change="toggleTodoStatus(todo)" class="w-4 h-4 accent-japanese-accent rounded cursor-pointer">
-              <span class="font-medium text-japanese-text" :class="todo.completed ? 'line-through text-japanese-muted' : ''" x-text="todo.task"></span>
-            </div>
-            <div class="flex items-center space-x-3">
-              <span x-show="todo.dueDate" class="text-[10px] text-japanese-muted tracking-wider" x-text="'預計: ' + formatDate(todo.dueDate)"></span>
-              <button x-show="!isClient" @click="deleteTodoItem(todo.id)" class="text-japanese-muted hover:text-japanese-warn text-xs transition-colors px-1">✕</button>
-            </div>
-          </div>
-        </template>
-        <template x-if="filteredTodos().length === 0">
-          <div class="text-center py-6 text-xs text-japanese-muted font-light">尚無待確認事項</div>
-        </template>
-      </div>
-    </section>
 
     <!-- 施工進度時間軸 (時間自動排序、選單狀態) -->
-    <section class="space-y-6">
+    <section id="schedule" class="space-y-6">
       <div class="flex justify-between items-end pb-2 border-b border-japanese-border">
         <h2 class="text-xs font-medium tracking-[0.2em] text-japanese-text uppercase">Progress Schedule / 施工進度時間軸</h2>
       </div>
@@ -205,7 +157,7 @@
     </section>
 
     <!-- 圖面與檔案區塊 -->
-    <section class="space-y-6">
+    <section id="documents" class="space-y-6">
       <div class="flex justify-between items-end pb-2 border-b border-japanese-border">
         <h2 class="text-xs font-medium tracking-[0.2em] text-japanese-text uppercase">Documents & Drawings / 案場圖面與檔案</h2>
       </div>
@@ -258,7 +210,7 @@
     </section>
 
     <!-- 工程追加減項目 -->
-    <section class="space-y-6">
+    <section id="variations" class="space-y-6">
       <div class="flex justify-between items-end pb-2 border-b border-japanese-border">
         <h2 class="text-xs font-medium tracking-[0.2em] text-japanese-text uppercase">Variations / 工程追加減項目</h2>
       </div>
@@ -269,7 +221,7 @@
           <option value="reduce">追減 (-)</option>
         </select>
         <input type="text" x-model="newVariation.item" placeholder="項目名稱" required class="sm:col-span-2 bg-japanese-bg border border-japanese-border/60 rounded-lg px-3 py-2 text-xs outline-none focus:border-japanese-accent">
-        <input type="number" x-model.number="newVariation.amount" placeholder="金額" required class="bg-japanese-bg border border-japanese-border/60 rounded-lg px-3 py-2 text-xs outline-none focus:border-japanese-accent">
+        <input inputmode="decimal" type="number" x-model.number="newVariation.amount" placeholder="金額" required class="bg-japanese-bg border border-japanese-border/60 rounded-lg px-3 py-2 text-xs outline-none focus:border-japanese-accent">
         <button type="submit" :disabled="isLoading" class="bg-japanese-text text-white text-xs rounded-lg py-2 hover:bg-japanese-accent transition-all font-light">登錄項目</button>
       </form>
 
@@ -296,8 +248,40 @@
       </div>
     </section>
 
+    <!-- 待確認/待辦事項 (雙模式區隔) -->
+    <section id="pending" class="space-y-6">
+      <div class="flex justify-between items-end pb-2 border-b border-japanese-border">
+        <h2 class="text-xs font-medium tracking-[0.2em] text-japanese-text uppercase">Pending Tasks / 待確認與待辦事項</h2>
+      </div>
+
+      <!-- 管理模式：新增事項 -->
+      <form x-show="!isClient" @submit.prevent="addTodoItem()" class="grid grid-cols-1 sm:grid-cols-5 gap-3 glass-card p-4 rounded-xl shadow-soft border border-japanese-border/40">
+        <input type="text" x-model="newTodo.task" placeholder="事項內容 (例: 確認燈具選樣)" required class="sm:col-span-2 bg-japanese-bg border border-japanese-border/60 rounded-lg px-3 py-2 text-xs outline-none focus:border-japanese-accent transition-all">
+        <input type="text" x-model="newTodo.dueDate" placeholder="預計完成時間" class="flatpickr-custom rounded-lg px-3 py-2 text-xs">
+        <button type="submit" :disabled="isLoading" class="sm:col-span-2 bg-japanese-text text-white text-xs rounded-lg py-2 hover:bg-japanese-accent transition-all font-light">新增事項</button>
+      </form>
+
+      <!-- 事項列表 (業主可勾選標記) -->
+      <div class="space-y-2">
+        <template x-for="todo in filteredTodos()" :key="todo.id">
+          <div class="flex items-center justify-between p-3.5 glass-card rounded-xl border border-japanese-border/30 shadow-soft text-xs transition-all">
+            <div class="flex items-center space-x-3">
+              <input type="checkbox" :checked="todo.completed" @change="toggleTodoStatus(todo)" class="w-4 h-4 accent-japanese-accent rounded cursor-pointer">
+              <span class="font-medium text-japanese-text" :class="todo.completed ? 'line-through text-japanese-muted' : ''" x-text="todo.task"></span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <span x-show="todo.dueDate" class="text-[10px] text-japanese-muted tracking-wider" x-text="'預計: ' + formatDate(todo.dueDate)"></span>
+              <button x-show="!isClient" @click="deleteTodoItem(todo.id)" class="text-japanese-muted hover:text-japanese-warn text-xs transition-colors px-1">✕</button>
+            </div>
+          </div>
+        </template>
+        <template x-if="filteredTodos().length === 0">
+          <div class="text-center py-6 text-xs text-japanese-muted font-light">尚無待確認事項</div>
+        </template>
+      </div>
+    </section>
     <!-- 現場反饋與問題追蹤 -->
-    <section class="space-y-6">
+    <section id="feedback" class="space-y-6">
       <div class="flex justify-between items-end pb-2 border-b border-japanese-border">
         <h2 class="text-xs font-medium tracking-[0.2em] text-japanese-text uppercase">Site Feedback / 現場反饋與問題提問</h2>
       </div>
@@ -373,7 +357,7 @@
             <button type="button" @click="newEntry.type = 'income'" :class="newEntry.type === 'income' ? 'bg-japanese-paper text-japanese-accent shadow-sm' : 'text-japanese-muted'" class="py-1 text-xs rounded-md transition-all">收入(請款)</button>
           </div>
           <input type="text" x-model="newEntry.item" placeholder="品項說明" required class="w-full bg-japanese-bg border border-japanese-border/60 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-japanese-accent">
-          <input type="number" x-model.number="newEntry.amount" placeholder="金額 NT$" required class="w-full bg-japanese-bg border border-japanese-border/60 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-japanese-accent">
+          <input inputmode="decimal" type="number" x-model.number="newEntry.amount" placeholder="金額 NT$" required class="w-full bg-japanese-bg border border-japanese-border/60 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-japanese-accent">
           <input type="text" x-model="newEntry.date" required class="flatpickr-custom w-full rounded-lg px-3 py-1.5 text-xs">
           <button type="submit" :disabled="isLoading" class="w-full bg-japanese-text text-white py-2 rounded-lg text-xs font-light hover:bg-japanese-accent transition-all">登錄帳目</button>
         </form>
@@ -398,18 +382,30 @@
       </div>
     </section>
 
+    <details x-show="isClient" class="app-help"><summary>安裝到手機主畫面</summary><p>iPhone：請用 Safari 開啟這個案場連結，按分享 → 加入主畫面。Android：用 Chrome 開啟，按選單 → 安裝應用程式／加入主畫面。請保留原案場連結，以便換手機時開啟。</p></details>
   </main>
+  <nav x-show="isClient" class="client-nav" aria-label="案場快速導覽"><a href="#overview" @click="activeSection='overview'" :aria-current="activeSection==='overview'?'location':null"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v11H3z"/><path d="M9 21v-8h6v8"/></svg><span>首頁</span></a><a href="#schedule" @click="activeSection='schedule'" :aria-current="activeSection==='schedule'?'location':null"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 11h18"/></svg><span>工期</span></a><a href="#documents" @click="activeSection='documents'" :aria-current="activeSection==='documents'?'location':null"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5zM14 3v5h5M8 12h8m-8 4h8"/></svg><span>文件</span></a><a href="#variations" @click="activeSection='variations'" :aria-current="activeSection==='variations'?'location':null"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 3v6M4 18h16m-5-3v6"/></svg><span>追加減</span></a><a href="#pending" @click="activeSection='pending'" :aria-current="activeSection==='pending'?'location':null"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m8 12 3 3 5-6"/></svg><span>待確認</span></a><a href="#feedback" @click="activeSection='feedback'" :aria-current="activeSection==='feedback'?'location':null"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v13H9l-6 4zM7 9h10m-10 4h6"/></svg><span>提問</span></a></nav>
 
   <footer class="border-t border-japanese-border/60 py-8 text-center text-[10px] text-japanese-muted tracking-[0.2em] mt-auto">
     © 2026 PLAN LUSTRE. ALL RIGHTS RESERVED.
   </footer>
 
   <script>
+    let datePickerReady;
+    function loadDatePicker(){return datePickerReady??=(async()=>{const css=document.createElement('link');css.rel='stylesheet';css.href='./flatpickr.css';document.head.append(css);for(const url of ['./flatpickr.js','./zh-tw.js'])await new Promise((resolve,reject)=>{const el=document.createElement('script');el.src=url;el.onload=resolve;el.onerror=reject;document.head.append(el)})})()}
+    if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
     const API_URL = "https://script.google.com/macros/s/AKfycby4qYqNCSvRldLAk4yY9i7TrJWT1x5uuSv-b8QN5Z2sgdYEcNkYzNB6yUlbxylbsNL_5A/exec";
 
     function lusterApp() {
       return {
         currentProject: "1", isClient: false, isClientLink: false,
+        activeSection:'overview', syncMessage:'正在連線更新案場資料…', lastFetched:null,
+        scheduleProgress(){const rows=this.filteredSchedules();return rows.length?Math.round(rows.filter(r=>r.status==='已完成').length/rows.length*100):0},
+        progressCaption(){const rows=this.filteredSchedules();return rows.length?'已完成 '+rows.filter(r=>r.status==='已完成').length+' / '+rows.length+' 項工期 · '+this.scheduleProgress()+'%':'尚未安排工期'},
+        projectStatusText(){return this.getActiveProject().clientStatus==='completed'?'完工 !!':'工程進行中'},
+        currentScheduleText(){if(this.getActiveProject().clientStatus==='completed')return '工程已完成，謝謝您的信任';const rows=this.filteredSchedules(),current=rows.filter(r=>r.status==='進行中');if(current.length)return '目前施作：'+current.map(r=>r.task).join('、');const next=rows.find(r=>r.status!=='已完成');return next?'接下來：'+next.task:rows.length?'工期項目已完成，等待完工確認':'工期安排確認後會在這裡更新'},
+        applyData(data){for(const key of ['projects','entries','schedules','defects','documents','variations','todos'])this[key]=Array.isArray(data[key])?data[key]:[]},
+        clientSnapshot(data){const projectId=String(this.currentProject),out={};for(const key of ['projects','schedules','defects','documents','variations','todos'])out[key]=(data[key]||[]).filter(r=>String(key==='projects'?r.id:r.projectId)===projectId);out.entries=[];return out},
         projects: [], entries: [], schedules: [], defects: [], documents: [], variations: [], todos: [], isLoading: false,
 
         newEntry: { type: 'expense', item: '', amount: null, date: new Date().toISOString().split('T')[0] },
@@ -423,28 +419,28 @@
           this.isLoading = true;
           const urlParams = new URLSearchParams(window.location.search);
           if (urlParams.get('mode') === 'client') { this.isClient = true; this.isClientLink = true; }
-          if (urlParams.get('projectId')) { this.currentProject = String(urlParams.get('projectId')); }
+          if(urlParams.get('projectId')){this.currentProject=String(urlParams.get('projectId'));if(this.isClientLink)try{localStorage.setItem('plan-lustre-last-project',this.currentProject)}catch{}}
+          else if(this.isClientLink){try{this.currentProject=localStorage.getItem('plan-lustre-last-project')||''}catch{this.currentProject=''}if(!this.currentProject){this.syncMessage='請從公司提供的專屬案場連結開啟，再加入手機主畫面。';this.isLoading=false;return}}
 
+          const cacheKey='plan-lustre-client-v2:'+this.currentProject;
+          if(this.isClientLink&&!this.lastFetched){try{const saved=JSON.parse(localStorage.getItem(cacheKey)||'null');if(saved&&Date.now()-saved.at<7*86400000){this.applyData(saved.data);this.syncMessage='先顯示上次資料（'+new Date(saved.at).toLocaleString('zh-TW')+'），正在更新…'}}catch{}}
           try {
-            let res = await fetch(`${API_URL}?mode=${this.isClient ? 'client' : 'admin'}`);
-            let data = await res.json();
-            this.projects = data.projects || [];
-            this.entries = data.entries || [];
-            this.schedules = data.schedules || [];
-            this.defects = data.defects || [];
-            this.documents = data.documents || [];
-            this.variations = data.variations || [];
-            this.todos = data.todos || [];
-            if (!urlParams.get('projectId') && this.projects.length > 0) this.currentProject = String(this.projects[0].id);
-          } catch (e) { alert("連線失敗，請檢查網址與部署權限"); } finally {
-            this.isLoading = false;
-            this.$nextTick(() => {
-              flatpickr.localize(flatpickr.l10ns.zh_tw);
-              flatpickr(".flatpickr-custom", { dateFormat: "Y-m-d", disableMobile: "true" });
+            const res=await fetch(API_URL+'?mode='+(this.isClient?'client':'admin')+'&projectId='+encodeURIComponent(this.currentProject),{cache:'no-store',signal:AbortSignal.timeout(25000)});
+            if(!res.ok)throw Error('讀取失敗');const data=await res.json();if(!Array.isArray(data.projects))throw Error('格式錯誤');
+            this.applyData(this.isClientLink?this.clientSnapshot(data):data);
+            if(!this.isClientLink&&!urlParams.get('projectId')&&this.projects.length)this.currentProject=String(this.projects[0].id);
+            this.lastFetched=Date.now();this.syncMessage='已更新 '+new Date(this.lastFetched).toLocaleString('zh-TW');
+            if(this.isClientLink){try{localStorage.setItem(cacheKey,JSON.stringify({at:this.lastFetched,data:this.clientSnapshot(data)}))}catch{}}
+          } catch(e){this.syncMessage=this.projects.length?'連線暫時失敗，目前顯示上次資料；請重新整理確認最新內容。':'案場資料暫時無法讀取，請按重新整理重試。'}finally{
+            this.isLoading=false;
+            this.$nextTick(async()=>{
+              if(!this.isClient){await loadDatePicker();flatpickr.localize(flatpickr.l10ns.zh_tw);flatpickr('.flatpickr-custom',{dateFormat:'Y-m-d',disableMobile:false})}
+              if(!this._observer){this._observer=new IntersectionObserver(items=>{for(const item of items)if(item.isIntersecting)this.activeSection=item.target.id},{rootMargin:'-90px 0px -55% 0px',threshold:0});for(const id of ['overview','schedule','documents','variations','pending','feedback']){const el=document.getElementById(id);if(el)this._observer.observe(el)}}
             });
           }
         },
 
+        async saveClientStatus(){if(this.isClient)return;const project=this.getActiveProject();try{const res=await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'updateProject',data:{id:String(project.id),clientStatus:project.clientStatus||'ongoing'}})});const result=await res.json();if(!result.success)throw Error();alert('工程顯示狀態已儲存')}catch{alert('儲存失敗，請重新整理確認')}} ,
         toggleMode() { if (!this.isClientLink) this.isClient = !this.isClient; },
         refreshUI() { this.isLoading = true; setTimeout(() => { this.isLoading = false; }, 300); },
 

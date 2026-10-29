@@ -1,0 +1,22 @@
+{
+  "name": "光所計畫 Plan Lustre｜我的案場",
+  "short_name": "Plan Lustre",
+  "id": "./",
+  "start_url": "./?mode=client",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F9F8F6",
+  "theme_color": "#F9F8F6",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
